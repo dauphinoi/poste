@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bilan GES - Prototype 3</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-section h2 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bilan GES - Prototype 3</h1>
+        
+        <form id="gesForm">
+            <div class="form-section">
+                <h2>Informations générales</h2>
+                <div class="form-group">
+                    <label for="company">Nom de l'entreprise:</label>
+                    <input type="text" id="company" name="company" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Année de référence:</label>
+                    <input type="number" id="year" name="year" min="2020" max="2030" required>
+                </div>
+                <div class="form-group">
+                    <label for="employees">Nombre d'employés:</label>
+                    <input type="number" id="employees" name="employees" min="1" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Consommations énergétiques</h2>
+                <div class="form-group">
+                    <label for="electricity">Électricité (kWh):</label>
+                    <input type="number" id="electricity" name="electricity" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="gas">Gaz naturel (kWh):</label>
+                    <input type="number" id="gas" name="gas" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="fuel">Fioul (litres):</label>
+                    <input type="number" id="fuel" name="fuel" min="0" step="0.01">
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Transport</h2>
+                <div class="form-group">
+                    <label for="carKm">Kilomètres parcourus en voiture:</label>
+                    <input type="number" id="carKm" name="carKm" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="flights">Nombre de vols (aller-retour):</label>
+                    <input type="number" id="flights" name="flights" min="0">
+                </div>
+            </div>
+
+            <button type="submit">Calculer le bilan GES</button>
+        </form>
+
+        <div id="results" class="results hidden">
+            <h2>Résultats du bilan GES</h2>
+            <div id="resultContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('gesForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Facteurs d'émission (kg CO2e)
+            const factors = {
+                electricity: 0.057, // kg CO2e/kWh (France)
+                gas: 0.227, // kg CO2e/kWh
+                fuel: 2.67, // kg CO2e/litre
+                car: 0.193, // kg CO2e/km (voiture moyenne)
+                flight: 285 // kg CO2e/vol aller-retour moyen
+            };
+            
+            // Récupération des valeurs
+            const data = {
+                company: document.getElementById('company').value,
+                year: document.getElementById('year').value,
+                employees: parseInt(document.getElementById('employees').value),
+                electricity: parseFloat(document.getElementById('electricity').value) || 0,
+                gas: parseFloat(document.getElementById('gas').value) || 0,
+                fuel: parseFloat(document.getElementById('fuel').value) || 0,
+                carKm: parseFloat(document.getElementById('carKm').value) || 0,
+                flights: parseInt(document.getElementById('flights').value) || 0
+            };
+            
+            // Calculs
+            const emissions = {
+                electricity: data.electricity * factors.electricity,
+                gas: data.gas * factors.gas,
+                fuel: data.fuel * factors.fuel,
+                car: data.carKm * factors.car,
+                flights: data.flights * factors.flight
+            };
+            
+            const totalEmissions = Object.values(emissions).reduce((sum, val) => sum + val, 0);
+            const emissionsPerEmployee = totalEmissions / data.employees;
+            
+            // Affichage des résultats
+            const resultContent = document.getElementById('resultContent');
+            resultContent.innerHTML = `
+                <h3>Entreprise: ${data.company} (${data.year})</h3>
+                <p><strong>Nombre d'employés:</strong> ${data.employees}</p>
+                
+                <h4>Détail des émissions:</h4>
+                <ul>
+                    <li>Électricité: ${emissions.electricity.toFixed(2)} kg CO2e</li>
+                    <li>Gaz naturel: ${emissions.gas.toFixed(2)} kg CO2e</li>
+                    <li>Fioul: ${emissions.fuel.toFixed(2)} kg CO2e</li>
+                    <li>Transport automobile: ${emissions.car.toFixed(2)} kg CO2e</li>
+                    <li>Vols: ${emissions.flights.toFixed(2)} kg CO2e</li>
+                </ul>
+                
+                <h4>Total:</h4>
+                <p><strong>Émissions totales:</strong> ${totalEmissions.toFixed(2)} kg CO2e (${(totalEmissions/1000).toFixed(2)} tonnes CO2e)</p>
+                <p><strong>Émissions par employé:</strong> ${emissionsPerEmployee.toFixed(2)} kg CO2e/employé</p>
+                
+                <h4>Analyse:</h4>
+                <p>${getAnalysis(totalEmissions, emissionsPerEmployee, data.employees)}</p>
+            `;
+            
+            document.getElementById('results').classList.remove('hidden');
+        });
+        
+        function getAnalysis(total, perEmployee, employees) {
+            let analysis = "";
+            
+            if (perEmployee < 1000) {
+                analysis += "Votre empreinte carbone par employé est relativement faible. ";
+            } else if (perEmployee < 3000) {
+                analysis += "Votre empreinte carbone par employé est dans la moyenne. ";
+            } else {
+                analysis += "Votre empreinte carbone par employé est élevée. ";
+            }
+            
+            if (employees < 10) {
+                analysis += "En tant que petite entreprise, vous avez l'opportunité de mettre en place des pratiques durables dès maintenant.";
+            } else if (employees < 50) {
+                analysis += "Votre entreprise de taille moyenne peut avoir un impact significatif en optimisant ses pratiques environnementales.";
+            } else {
+                analysis += "En tant que grande entreprise, votre engagement environnemental peut avoir un impact considérable.";
+            }
+            
+            return analysis;
+        }
+    </script>
+</body>
+</html>
