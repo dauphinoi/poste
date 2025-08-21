@@ -1,0 +1,3927 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur Bilan GES - La Poste</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Fallback si le CDN principal échoue -->
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof Chart === 'undefined') {
+                console.log('Chargement de Chart.js depuis un CDN alternatif...');
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js';
+                script.onload = function() {
+                    console.log('Chart.js chargé avec succès depuis le CDN alternatif');
+                };
+                document.head.appendChild(script);
+            }
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        /* Header La Poste */
+        .header-laposte {
+            background: #FFCC00;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .logo-laposte {
+            width: 120px;
+            height: 40px;
+            background: #003A70;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .header-title {
+            color: #003A70;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Menu Hamburger */
+        .hamburger-menu {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .hamburger-button {
+            background: #003A70;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0, 58, 112, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-button:hover {
+            background: #002855;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 58, 112, 0.4);
+        }
+
+        .hamburger-icon {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .hamburger-icon span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-button.active .hamburger-icon span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-button.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-button.active .hamburger-icon span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        .auto-fill-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            padding: 20px;
+            margin-top: 10px;
+            min-width: 300px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+
+        .auto-fill-menu.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .menu-section {
+            margin-bottom: 20px;
+        }
+
+        .menu-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .menu-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-button {
+            width: 100%;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .menu-button:hover {
+            transform: translateX(5px);
+        }
+
+        .menu-button.template {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #A5D6A7;
+        }
+
+        .menu-button.template:hover {
+            background: #C8E6C9;
+        }
+
+        .menu-button.data {
+            background: #E3F2FD;
+            color: #1565C0;
+            border: 1px solid #90CAF9;
+        }
+
+        .menu-button.data:hover {
+            background: #BBDEFB;
+        }
+
+        .menu-button.file {
+            background: #FFF3E0;
+            color: #E65100;
+            border: 1px solid #FFCC80;
+        }
+
+        .menu-button.file:hover {
+            background: #FFE0B2;
+        }
+
+        .menu-separator {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 15px 0;
+        }
+
+        /* Container principal */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Notification d'auto-remplissage */
+        .auto-fill-notice {
+            background: #E8F5E9;
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .auto-fill-notice-icon {
+            background: #4CAF50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .auto-fill-notice-text {
+            flex: 1;
+        }
+
+        .auto-fill-notice-title {
+            font-weight: 600;
+            color: #2E7D32;
+            margin-bottom: 5px;
+        }
+
+        .auto-fill-notice-description {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* Carte principale */
+        .calculator-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #003A70 0%, #002855 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .card-header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+
+        .card-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #FFCC00;
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        /* Champs du formulaire */
+        .manual-field {
+            background: #FFF9E6 !important;
+            border: 2px solid #FFCC00 !important;
+        }
+
+        .auto-field {
+            background: #E8F4F8 !important;
+            border: 2px solid #00A651 !important;
+            position: relative;
+        }
+
+        .auto-field-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #00A651;
+            color: white;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .field-indicator {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+
+        .indicator-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .indicator-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+        }
+
+        .indicator-box.manual {
+            background: #FFF9E6;
+            border: 2px solid #FFCC00;
+        }
+
+        .indicator-box.auto {
+            background: #E8F4F8;
+            border: 2px solid #00A651;
+        }
+
+        /* Radio buttons pour chauffage électrique */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-option input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #003A70;
+        }
+
+        /* Sections du formulaire */
+        .form-section {
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .section-header {
+            padding: 25px 30px;
+            background: #fafbfc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+
+        .section-header:hover {
+            background: #f0f2f5;
+            border-left-color: #FFCC00;
+        }
+
+        .section-header.active {
+            background: linear-gradient(to right, #f0f2f5, #fafbfc);
+            border-left-color: #003A70;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #333;
+        }
+
+        .section-header.active .section-title {
+            color: #003A70;
+        }
+
+        .section-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+
+        .section-header.active .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            background: white;
+        }
+
+        .section-content.active {
+            padding: 30px;
+            max-height: 3000px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #003A70;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #003A70;
+            box-shadow: 0 0 0 4px rgba(0, 58, 112, 0.1);
+        }
+
+        .subsection {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border-left: 4px solid #FFCC00;
+        }
+
+        .subsection-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #003A70;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .unit {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        /* Trajets mixtes */
+        .transport-mode-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafbfc;
+        }
+
+        .transport-mode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .transport-mode-header h4 {
+            color: #003A70;
+            font-size: 1.1rem;
+        }
+
+        .add-transport-btn {
+            background: #00A651;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-transport-btn:hover {
+            background: #008040;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 166, 81, 0.3);
+        }
+
+        .transport-mode-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .remove-transport-btn {
+            background: #E60028;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .remove-transport-btn:hover {
+            background: #CC0020;
+        }
+
+        /* Distance multiplier */
+        .distance-multiplier {
+            margin-top: 15px;
+            padding: 15px;
+            background: #E8F4F8;
+            border-radius: 8px;
+            border-left: 4px solid #00A651;
+        }
+
+        .multiplier-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .multiplier-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #00A651;
+        }
+
+        /* Bouton calculer */
+        .calculate-button {
+            background: linear-gradient(135deg, #00A651 0%, #008040 100%);
+            color: white;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 40px auto;
+            display: block;
+            box-shadow: 0 5px 20px rgba(0, 166, 81, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calculate-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 166, 81, 0.4);
+        }
+
+        .calculate-button:active {
+            transform: translateY(-1px);
+        }
+
+        /* Section résultats */
+        .results-section {
+            background: white;
+            border-radius: 12px;
+            margin-top: 30px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, #003A70 0%, #002855 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .results-header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .results-content {
+            padding: 40px;
+        }
+
+        /* Scopes détaillés */
+        .scopes-section {
+            margin: 40px 0;
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+        }
+
+        .scopes-title {
+            font-size: 1.5rem;
+            color: #003A70;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .scopes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .scope-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-top: 4px solid;
+        }
+
+        .scope-card.scope1 { border-top-color: #E60028; }
+        .scope-card.scope2 { border-top-color: #FFCC00; }
+        .scope-card.scope3 { border-top-color: #00A651; }
+
+        .scope-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .scope-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #003A70;
+        }
+
+        .scope-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #E60028;
+        }
+
+        .scope-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .scope-categories {
+            list-style: none;
+        }
+
+        .scope-categories li {
+            padding: 5px 0;
+            font-size: 0.9rem;
+            color: #555;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .scope-categories li:last-child {
+            border-bottom: none;
+        }
+
+        /* Graphiques */
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .chart-box {
+            background: #fafbfc;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            height: 500px;
+        }
+
+        .chart-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #003A70;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        canvas {
+            max-height: 420px !important;
+        }
+
+        /* Comparaison de scénarios */
+        .comparison-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .scenario-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .scenario-btn {
+            padding: 12px 25px;
+            border: 2px solid #003A70;
+            background: white;
+            color: #003A70;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-btn:hover {
+            background: #003A70;
+            color: white;
+        }
+
+        .scenario-btn.active {
+            background: #003A70;
+            color: white;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #003A70;
+        }
+
+        .comparison-chart {
+            height: 400px;
+            margin: 30px 0;
+        }
+
+        /* Recommandations */
+        .recommendations-section {
+            background: linear-gradient(135deg, #E8F5E9, #F1F8E9);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 2px solid #4CAF50;
+        }
+
+        .recommendations-title {
+            font-size: 1.5rem;
+            color: #2E7D32;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .recommendation-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid #4CAF50;
+        }
+
+        .recommendation-priority {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .priority-high {
+            background: #FFEBEE;
+            color: #C62828;
+        }
+
+        .priority-medium {
+            background: #FFF3E0;
+            color: #EF6C00;
+        }
+
+        .priority-low {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .recommendation-title {
+            font-weight: 600;
+            color: #003A70;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .recommendation-impact {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2E7D32;
+        }
+
+        /* Résultats détaillés */
+        .detailed-results {
+            margin-top: 40px;
+        }
+
+        .detailed-results h3 {
+            font-size: 1.5rem;
+            color: #003A70;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .result-category {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .result-category:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .category-header {
+            background: #fafbfc;
+            padding: 20px 25px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .category-header:hover {
+            background: #f0f2f5;
+        }
+
+        .category-header.active {
+            background: linear-gradient(to right, #003A70, #004080);
+            color: white;
+        }
+
+        .category-header.active .category-title,
+        .category-header.active .category-total {
+            color: white;
+        }
+
+        .category-title {
+            font-weight: 600;
+            color: #003A70;
+            font-size: 1.1rem;
+        }
+
+        .category-total {
+            font-weight: bold;
+            color: #E60028;
+            font-size: 1.15rem;
+        }
+
+        .category-details {
+            display: none;
+            padding: 25px;
+            background: white;
+        }
+
+        .category-details.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Boutons d'action */
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #003A70;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #002855;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 58, 112, 0.3);
+        }
+
+        .btn-success {
+            background: #00A651;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #008040;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 166, 81, 0.3);
+        }
+
+        .btn-info {
+            background: #FFCC00;
+            color: #003A70;
+        }
+
+        .btn-info:hover {
+            background: #FFD633;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.3);
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #00A651, #008040);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #E60028, #CC0020);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #003A70, #002855);
+        }
+
+        .summary-total {
+            background: linear-gradient(135deg, #003A70 0%, #002855 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 5px 20px rgba(0, 58, 112, 0.2);
+        }
+
+        .summary-total h2 {
+            font-size: 1.3rem;
+            font-weight: 400;
+            margin-bottom: 10px;
+            opacity: 0.9;
+        }
+
+        .total-value {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .summary-total p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Responsiveness */
+        @media (max-width: 1024px) {
+            .header-content {
+                justify-content: center;
+                text-align: center;
+            }
+            
+            .hamburger-menu {
+                top: 120px;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-box {
+                height: 450px;
+            }
+
+            .scopes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .card-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .header-title {
+                font-size: 1.3rem;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .transport-mode-item {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .transport-mode-item input,
+            .transport-mode-item select {
+                width: 100%;
+            }
+            
+            .calculate-button {
+                padding: 16px 40px;
+                font-size: 1.1rem;
+            }
+            
+            .total-value {
+                font-size: 2.5rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .section-title {
+                font-size: 1.15rem;
+            }
+            
+            .auto-fill-menu {
+                right: -20px;
+                left: -20px;
+                width: auto;
+                margin: 10px 20px;
+            }
+
+            .scenario-controls {
+                flex-direction: column;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .card-header {
+                padding: 25px 20px;
+            }
+            
+            .section-header {
+                padding: 20px;
+            }
+            
+            .section-content.active {
+                padding: 20px;
+            }
+            
+            .subsection {
+                padding: 20px;
+            }
+            
+            .chart-box {
+                padding: 20px;
+                height: 400px;
+            }
+            
+            canvas {
+                max-height: 350px !important;
+            }
+            
+            .hamburger-button {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Animation de chargement */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header La Poste -->
+    <header class="header-laposte">
+        <div class="header-content">
+            <div class="logo-container">
+                <div class="logo-laposte">La Poste</div>
+                <h1 class="header-title">Calculateur Bilan GES</h1>
+            </div>
+            <div style="color: #003A70; font-weight: 600;">
+                Engagement pour la neutralité carbone
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Hamburger -->
+    <div class="hamburger-menu">
+        <button class="hamburger-button" onclick="toggleAutoFillMenu()" id="hamburgerBtn">
+            <div class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <span>Remplissage Auto</span>
+        </button>
+        
+        <div class="auto-fill-menu" id="autoFillMenu">
+            <div class="menu-section">
+                <div class="menu-section-title">Templates prédéfinis</div>
+                <button class="menu-button template" onclick="applyTemplate('direction_regionale')">
+                    🏢 Direction régionale
+                </button>
+                <button class="menu-button template" onclick="applyTemplate('plateforme_industrielle')">
+                    🏗️ Plateforme industrielle
+                </button>
+                <button class="menu-button template" onclick="applyTemplate('vlp_bureau')">
+                    🏢 VLP ou bureau
+                </button>
+                <button class="menu-button template" onclick="applyTemplate('bureau_poste')">
+                    📮 Bureau de poste
+                </button>
+            </div>
+            
+            <div class="menu-separator"></div>
+            
+            <div class="menu-section">
+                <div class="menu-section-title">Données</div>
+                <button class="menu-button data" onclick="fillWithSampleData()">
+                    📊 Données d'exemple
+                </button>
+                <button class="menu-button data" onclick="fillWithHistoricalData()">
+                    📈 Données historiques
+                </button>
+            </div>
+            
+            <div class="menu-separator"></div>
+            
+            <div class="menu-section">
+                <div class="menu-section-title">Import/Export</div>
+                <button class="menu-button file" onclick="importFile()">
+                    📁 Importer un fichier
+                </button>
+                <button class="menu-button file" onclick="saveFormData()">
+                    💾 Sauvegarder
+                </button>
+                <button class="menu-button file" onclick="loadFormData()">
+                    📂 Charger sauvegarde
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Notice d'auto-remplissage -->
+        <div class="auto-fill-notice">
+            <div class="auto-fill-notice-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                </svg>
+            </div>
+            <div class="auto-fill-notice-text">
+                <div class="auto-fill-notice-title">Remplissage automatique activé</div>
+                <div class="auto-fill-notice-description">
+                    Les champs en vert sont pré-remplis automatiquement selon votre profil. 
+                    Vous pouvez les modifier à tout moment.
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicateur de champs -->
+        <div class="field-indicator">
+            <div class="indicator-item">
+                <div class="indicator-box manual"></div>
+                <span><strong>Champs manuels</strong> - À remplir par vos soins</span>
+            </div>
+            <div class="indicator-item">
+                <div class="indicator-box auto"></div>
+                <span><strong>Champs automatiques</strong> - Pré-remplis (modifiables)</span>
+            </div>
+        </div>
+
+        <div class="calculator-card">
+            <div class="card-header">
+                <h1>Calculateur Bilan GES</h1>
+                <p>Évaluez l'empreinte carbone de votre entité La Poste</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <form id="bilanGESForm">
+                <!-- Section 1: Informations générales -->
+                <div class="form-section">
+                    <div class="section-header active" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">📋</span> Informations générales</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content active">
+                        <div class="subsection">
+                            <div class="subsection-title">📄 Identification du bilan</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="bilan_numero">Numéro du bilan GES</label>
+                                    <input type="text" id="bilan_numero" name="bilan_numero" class="auto-field" placeholder="Ex: BG2024-001">
+                                </div>
+                                <div class="form-group">
+                                    <label for="annee">Année du bilan</label>
+                                    <input type="number" id="annee" name="annee" class="auto-field" value="2024" min="2020" max="2030">
+                                </div>
+                                <div class="form-group">
+                                    <label for="date_creation">Date de création</label>
+                                    <input type="date" id="date_creation" name="date_creation" class="auto-field">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <div class="subsection-title">👤 Auteur du bilan</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="auteur_nom">Nom</label>
+                                    <input type="text" id="auteur_nom" name="auteur_nom" class="auto-field" placeholder="Nom de famille">
+                                </div>
+                                <div class="form-group">
+                                    <label for="auteur_prenom">Prénom</label>
+                                    <input type="text" id="auteur_prenom" name="auteur_prenom" class="auto-field" placeholder="Prénom">
+                                </div>
+                                <div class="form-group">
+                                    <label for="auteur_email">Adresse électronique</label>
+                                    <input type="email" id="auteur_email" name="auteur_email" class="manual-field" placeholder="email@laposte.fr" onblur="autoFillFromEmail()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <div class="subsection-title">🏢 Description de l'entité</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="entite_nom">Nom de l'entité</label>
+                                    <input type="text" id="entite_nom" name="entite_nom" class="manual-field" placeholder="Ex: Direction Régionale Nord" onblur="autoFillFromEntity()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="code_regate">Code REGATE</label>
+                                    <input type="text" id="code_regate" name="code_regate" class="auto-field" placeholder="Code REGATE">
+                                </div>
+                                <div class="form-group">
+                                    <label for="type_entite">Type d'entité</label>
+                                    <select id="type_entite" name="type_entite" class="auto-field">
+                                        <option value="">Sélectionner...</option>
+                                        <option value="direction_regionale">Direction Régionale</option>
+                                        <option value="direction_territoriale">Direction Territoriale</option>
+                                        <option value="plateforme_industrielle">Plateforme Industrielle</option>
+                                        <option value="bureau_de_poste">Bureau de Poste</option>
+                                        <option value="autre">Autre</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Équipes -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">👥</span> Description des équipes</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="collaborateurs_internes">Collaborateurs internes</label>
+                                <input type="number" id="collaborateurs_internes" name="collaborateurs_internes" class="auto-field" min="0" step="1">
+                                <div class="unit">ETP (Équivalent Temps Plein) sur 1 an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="collaborateurs_externes">Collaborateurs externes</label>
+                                <input type="number" id="collaborateurs_externes" name="collaborateurs_externes" class="auto-field" min="0" step="1">
+                                <div class="unit">ETP sur 1 an</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Description des bâtiments -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">🏢</span> Description des bâtiments</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="subsection">
+                            <div class="subsection-title">📐 Surfaces et caractéristiques</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="surface_bureaux">Surface bureaux</label>
+                                    <input type="number" id="surface_bureaux" name="surface_bureaux" class="auto-field" min="0" step="0.1">
+                                    <div class="unit">m²</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="surface_entrepots">Surface entrepôts</label>
+                                    <input type="number" id="surface_entrepots" name="surface_entrepots" class="auto-field" min="0" step="0.1">
+                                    <div class="unit">m²</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="surface_tri">Surface centres de tri</label>
+                                    <input type="number" id="surface_tri" name="surface_tri" class="auto-field" min="0" step="0.1">
+                                    <div class="unit">m²</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="annee_construction">Année de construction moyenne</label>
+                                    <input type="number" id="annee_construction" name="annee_construction" class="auto-field" min="1900" max="2030">
+                                </div>
+                                <div class="form-group">
+                                    <label for="code_postal">Code postal</label>
+                                    <input type="text" id="code_postal" name="code_postal" class="manual-field" placeholder="75001" onblur="updateReseauChaleur()">
+                                </div>
+                                <div class="form-group">
+                                    <label for="reseau_chaleur">Réseau de chaleur</label>
+                                    <select id="reseau_chaleur" name="reseau_chaleur" class="auto-field">
+                                        <option value="">Aucun réseau de chaleur</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <div class="subsection-title">🔥 Chauffage</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Usage du chauffage électrique</label>
+                                    <div class="radio-group">
+                                        <div class="radio-option">
+                                            <input type="radio" id="chauffage_elec_oui" name="chauffage_electrique" value="oui">
+                                            <label for="chauffage_elec_oui">Oui</label>
+                                        </div>
+                                        <div class="radio-option">
+                                            <input type="radio" id="chauffage_elec_non" name="chauffage_electrique" value="non" checked>
+                                            <label for="chauffage_elec_non">Non</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Description de la flotte postale -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">🚗</span> Description de la flotte postale</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="subsection">
+                            <div class="subsection-title">🚐 Véhicules légers</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="vehicules_essence">Véhicules essence</label>
+                                    <input type="number" id="vehicules_essence" name="vehicules_essence" class="auto-field" min="0" step="1">
+                                    <div class="unit">nombre</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="vehicules_diesel">Véhicules diesel</label>
+                                    <input type="number" id="vehicules_diesel" name="vehicules_diesel" class="auto-field" min="0" step="1">
+                                    <div class="unit">nombre</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="vehicules_electriques">Véhicules électriques</label>
+                                    <input type="number" id="vehicules_electriques" name="vehicules_electriques" class="auto-field" min="0" step="1">
+                                    <div class="unit">nombre</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="motos_thermiques">Motos thermiques</label>
+                                    <input type="number" id="motos_thermiques" name="motos_thermiques" class="auto-field" min="0" step="1">
+                                    <div class="unit">nombre</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="km_flotte_annuel">Kilométrage annuel total</label>
+                                    <input type="number" id="km_flotte_annuel" name="km_flotte_annuel" class="auto-field" min="0" step="1000">
+                                    <div class="unit">km/an</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subsection">
+                            <div class="subsection-title">🚛 Véhicules lourds</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="camions_diesel">Camions diesel</label>
+                                    <input type="number" id="camions_diesel" name="camions_diesel" class="auto-field" min="0" step="1">
+                                    <div class="unit">nombre</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="km_camions_annuel">Kilométrage camions</label>
+                                    <input type="number" id="km_camions_annuel" name="km_camions_annuel" class="auto-field" min="0" step="1000">
+                                    <div class="unit">km/an</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 5: Transport sous-traité -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">🚛</span> Transport sous-traité</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="transport_soustraite_tonnes_km">Transport sous-traité</label>
+                                <input type="number" id="transport_soustraite_tonnes_km" name="transport_soustraite_tonnes_km" class="auto-field" min="0" step="1000">
+                                <div class="unit">tonnes.km/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="transport_soustraite_euros">Budget transport sous-traité</label>
+                                <input type="number" id="transport_soustraite_euros" name="transport_soustraite_euros" class="auto-field" min="0" step="1000">
+                                <div class="unit">€/an</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 6: Encadrement de l'activité -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">📅</span> Encadrement de l'activité</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="colis_traites">Nombre de colis traités</label>
+                                <input type="number" id="colis_traites" name="colis_traites" class="auto-field" min="0" step="1000">
+                                <div class="unit">colis/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="courrier_traite">Tonnage courrier traité</label>
+                                <input type="number" id="courrier_traite" name="courrier_traite" class="auto-field" min="0" step="1">
+                                <div class="unit">tonnes/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="chiffre_affaires">Chiffre d'affaires</label>
+                                <input type="number" id="chiffre_affaires" name="chiffre_affaires" class="auto-field" min="0" step="1000">
+                                <div class="unit">€/an</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 7: Déplacements -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">✈️</span> Déplacements</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="subsection">
+                            <div class="subsection-title">🏠➡️🏢 Déplacements domicile-travail</div>
+                            <div class="transport-mode-container">
+                                <div class="transport-mode-header">
+                                    <h4>Modes de transport utilisés</h4>
+                                    <button type="button" class="add-transport-btn" onclick="addTransportMode()">
+                                        + Ajouter un mode
+                                    </button>
+                                </div>
+                                <div id="transportModesContainer">
+                                    <!-- Les modes de transport seront ajoutés dynamiquement -->
+                                </div>
+                                <div class="distance-multiplier">
+                                    <div class="multiplier-checkbox">
+                                        <input type="checkbox" id="multiplier_distance" checked>
+                                        <label for="multiplier_distance">Multiplier par 2 (aller-retour)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subsection">
+                            <div class="subsection-title">✈️ Déplacements professionnels</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="vols_domestiques_km">Vols domestiques</label>
+                                    <input type="number" id="vols_domestiques_km" name="vols_domestiques_km" class="auto-field" min="0" step="100">
+                                    <div class="unit">km/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="vols_europeens_km">Vols européens</label>
+                                    <input type="number" id="vols_europeens_km" name="vols_europeens_km" class="auto-field" min="0" step="100">
+                                    <div class="unit">km/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="vols_internationaux_km">Vols intercontinentaux</label>
+                                    <input type="number" id="vols_internationaux_km" name="vols_internationaux_km" class="auto-field" min="0" step="100">
+                                    <div class="unit">km/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="train_km">Déplacements en train</label>
+                                    <input type="number" id="train_km" name="train_km" class="auto-field" min="0" step="100">
+                                    <div class="unit">km/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="motos_pro_km">Motos professionnelles</label>
+                                    <input type="number" id="motos_pro_km" name="motos_pro_km" class="auto-field" min="0" step="100">
+                                    <div class="unit">km/an</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 8: Achats par postes d'achats -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">🛒</span> Achats par postes d'achats</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="subsection">
+                            <div class="subsection-title">📝 Bureau et papeterie</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="papier_tonnes">Papier (quantité)</label>
+                                    <input type="number" id="papier_tonnes" name="papier_tonnes" class="auto-field" min="0" step="0.001">
+                                    <div class="unit">tonnes/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="papeterie_euros">Autres fournitures papeterie</label>
+                                    <input type="number" id="papeterie_euros" name="papeterie_euros" class="auto-field" min="0" step="0.01">
+                                    <div class="unit">€/an</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <div class="subsection-title">💻 Matériel informatique et télécom</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="ordinateurs_euros">Ordinateurs</label>
+                                    <input type="number" id="ordinateurs_euros" name="ordinateurs_euros" class="auto-field" min="0" step="0.01">
+                                    <div class="unit">€/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="telephones_euros">Téléphones portables</label>
+                                    <input type="number" id="telephones_euros" name="telephones_euros" class="auto-field" min="0" step="0.01">
+                                    <div class="unit">€/an</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <div class="subsection-title">🚚 Transport et logistique</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="transport_marchandises_euros">Transport de marchandises</label>
+                                    <input type="number" id="transport_marchandises_euros" name="transport_marchandises_euros" class="auto-field" min="0" step="0.01">
+                                    <div class="unit">€/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="emballages_euros">Emballages</label>
+                                    <input type="number" id="emballages_euros" name="emballages_euros" class="auto-field" min="0" step="0.01">
+                                    <div class="unit">€/an</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 9: Restauration d'entreprise -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">🍽️</span> Restauration d'entreprise</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="repas_viande">Repas avec viande</label>
+                                <input type="number" id="repas_viande" name="repas_viande" class="auto-field" min="0" step="1">
+                                <div class="unit">repas/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="repas_poisson">Repas avec poisson</label>
+                                <input type="number" id="repas_poisson" name="repas_poisson" class="auto-field" min="0" step="1">
+                                <div class="unit">repas/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="repas_vegetarien">Repas végétariens</label>
+                                <input type="number" id="repas_vegetarien" name="repas_vegetarien" class="auto-field" min="0" step="1">
+                                <div class="unit">repas/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="budget_restauration">Budget restauration</label>
+                                <input type="number" id="budget_restauration" name="budget_restauration" class="auto-field" min="0" step="100">
+                                <div class="unit">€/an</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 10: Consommations énergétiques -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">⚡</span> Consommations énergétiques</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="subsection">
+                            <div class="subsection-title">💡 Électricité</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="electricite_kwh">Consommation électricité</label>
+                                    <input type="number" id="electricite_kwh" name="electricite_kwh" class="auto-field" min="0" step="0.1">
+                                    <div class="unit">kWh/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="electricite_renouvelable">% d'électricité renouvelable</label>
+                                    <input type="number" id="electricite_renouvelable" name="electricite_renouvelable" class="auto-field" min="0" max="100" step="1">
+                                    <div class="unit">%</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="subsection">
+                            <div class="subsection-title">🔥 Gaz et chauffage</div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="gaz_kwh">Consommation gaz naturel</label>
+                                    <input type="number" id="gaz_kwh" name="gaz_kwh" class="auto-field" min="0" step="0.1">
+                                    <div class="unit">kWh/an</div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="fioul_litres">Consommation fioul</label>
+                                    <input type="number" id="fioul_litres" name="fioul_litres" class="auto-field" min="0" step="0.1">
+                                    <div class="unit">litres/an</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 11: Déchets générés -->
+                <div class="form-section">
+                    <div class="section-header" onclick="toggleSection(this)">
+                        <div class="section-title">
+                            <div><span class="section-icon">🗑️</span> Déchets générés</div>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="dechets_recyclables_tonnes">Déchets recyclables</label>
+                                <input type="number" id="dechets_recyclables_tonnes" name="dechets_recyclables_tonnes" class="auto-field" min="0" step="0.01">
+                                <div class="unit">tonnes/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="dechets_non_recyclables_tonnes">Déchets non recyclables</label>
+                                <input type="number" id="dechets_non_recyclables_tonnes" name="dechets_non_recyclables_tonnes" class="auto-field" min="0" step="0.01">
+                                <div class="unit">tonnes/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="dechets_dangereux_tonnes">Déchets dangereux</label>
+                                <input type="number" id="dechets_dangereux_tonnes" name="dechets_dangereux_tonnes" class="auto-field" min="0" step="0.01">
+                                <div class="unit">tonnes/an</div>
+                            </div>
+                            <div class="form-group">
+                                <label for="dechets_organiques_tonnes">Déchets organiques</label>
+                                <input type="number" id="dechets_organiques_tonnes" name="dechets_organiques_tonnes" class="auto-field" min="0" step="0.01">
+                                <div class="unit">tonnes/an</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="calculate-button" onclick="calculerBilan()" id="calculateBtn">
+                    📊 Calculer le bilan GES
+                </button>
+            </form>
+        </div>
+
+        <!-- Section résultats -->
+        <div id="results" class="results-section hidden">
+            <div class="results-header">
+                <h1>📈 Résultats du bilan GES</h1>
+                <p>Analyse complète des émissions de gaz à effet de serre</p>
+            </div>
+            
+            <div class="results-content">
+                <!-- Total général -->
+                <div class="summary-total">
+                    <h2>Émissions totales</h2>
+                    <div class="total-value" id="totalEmissions">0</div>
+                    <p>tonnes eq. CO₂ / an</p>
+                </div>
+
+                <!-- Section Scopes détaillés -->
+                <div class="scopes-section">
+                    <h2 class="scopes-title">Répartition par Scopes GHG Protocol</h2>
+                    <div class="scopes-grid">
+                        <div class="scope-card scope1">
+                            <div class="scope-header">
+                                <div class="scope-name">Scope 1</div>
+                                <div class="scope-value" id="scope1Value">0 t</div>
+                            </div>
+                            <div class="scope-description">
+                                Émissions directes de gaz à effet de serre provenant de sources détenues ou contrôlées par l'organisation.
+                            </div>
+                            <ul class="scope-categories">
+                                <li>• Combustion fixe (chauffage, générateurs)</li>
+                                <li>• Combustion mobile (flotte de véhicules)</li>
+                                <li>• Émissions fugitives (fuites de réfrigérants)</li>
+                                <li>• Émissions des procédés industriels</li>
+                            </ul>
+                        </div>
+
+                        <div class="scope-card scope2">
+                            <div class="scope-header">
+                                <div class="scope-name">Scope 2</div>
+                                <div class="scope-value" id="scope2Value">0 t</div>
+                            </div>
+                            <div class="scope-description">
+                                Émissions indirectes liées à la consommation d'énergie achetée (électricité, chaleur, vapeur, froid).
+                            </div>
+                            <ul class="scope-categories">
+                                <li>• Consommation d'électricité</li>
+                                <li>• Achat de chaleur/vapeur</li>
+                                <li>• Achat de froid</li>
+                                <li>• Réseaux de chaleur urbains</li>
+                            </ul>
+                        </div>
+
+                        <div class="scope-card scope3">
+                            <div class="scope-header">
+                                <div class="scope-name">Scope 3</div>
+                                <div class="scope-value" id="scope3Value">0 t</div>
+                            </div>
+                            <div class="scope-description">
+                                Autres émissions indirectes qui se produisent dans la chaîne de valeur de l'organisation.
+                            </div>
+                            <ul class="scope-categories">
+                                <li>• Achats de biens et services</li>
+                                <li>• Transport et distribution amont/aval</li>
+                                <li>• Déplacements professionnels et domicile-travail</li>
+                                <li>• Utilisation et fin de vie des produits vendus</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Graphiques -->
+                <div class="charts-container">
+                    <div class="chart-box">
+                        <div class="chart-title">Répartition par catégorie</div>
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="chart-box">
+                        <div class="chart-title">Émissions par collaborateur</div>
+                        <canvas id="perEmployeeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recommandations -->
+                <div class="recommendations-section">
+                    <h2 class="recommendations-title">
+                        💡 Recommandations personnalisées
+                    </h2>
+                    <div class="recommendations-grid" id="recommendationsContainer">
+                        <!-- Les recommandations seront générées dynamiquement -->
+                    </div>
+                </div>
+
+                <!-- Résultats détaillés -->
+                <div class="detailed-results">
+                    <h3>Détail par catégorie</h3>
+                    <div id="detailedResultsContainer">
+                        <!-- Les résultats détaillés seront ajoutés ici -->
+                    </div>
+                </div>
+
+                <!-- Boutons d'action -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="exportToPDF()">
+                        📄 Exporter PDF
+                    </button>
+                    <button class="btn btn-success" onclick="exportToExcel()">
+                        📊 Exporter Excel
+                    </button>
+                    <button class="btn btn-info" onclick="showComparison()">
+                        🔄 Comparer scénarios
+                    </button>
+                    <button class="btn btn-info" onclick="shareResults()">
+                        📤 Partager
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section comparaison de scénarios -->
+        <div id="comparison" class="comparison-section hidden">
+            <div class="results-header">
+                <h1>🔄 Comparaison de scénarios</h1>
+                <p>Analysez l'impact de différentes mesures de réduction</p>
+            </div>
+            
+            <div class="scenario-controls">
+                <button class="scenario-btn active" onclick="selectScenario('current')" id="currentScenarioBtn">
+                    Scénario actuel
+                </button>
+                <button class="scenario-btn" onclick="selectScenario('optimized')" id="optimizedScenarioBtn">
+                    Scénario optimisé
+                </button>
+                <button class="scenario-btn" onclick="createCustomScenario()" id="customScenarioBtn">
+                    + Créer un scénario
+                </button>
+            </div>
+
+            <div id="scenarioComparison">
+                <!-- Le contenu de comparaison sera généré dynamiquement -->
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="hideComparison()">
+                    ← Retour aux résultats
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Variables globales
+        let transportModeCounter = 0;
+        let chartInstances = {};
+        let currentResults = null;
+        let scenarios = {
+            current: null,
+            optimized: null,
+            custom: []
+        };
+
+        // Base de données des réseaux de chaleur par département
+        const reseauxChaleur = {
+            '01': ['Réseau de chaleur Bourg-en-Bresse'],
+            '02': ['Réseau de chaleur Laon', 'Réseau de chaleur Soissons'],
+            '03': ['Réseau de chaleur Montluçon', 'Réseau de chaleur Vichy'],
+            '04': ['Réseau de chaleur Digne-les-Bains'],
+            '05': ['Réseau de chaleur Gap', 'Réseau de chaleur Briançon'],
+            '06': ['Réseau de chaleur Nice', 'Réseau de chaleur Cannes', 'Réseau de chaleur Antibes'],
+            '07': ['Réseau de chaleur Privas'],
+            '08': ['Réseau de chaleur Charleville-Mézières'],
+            '09': ['Réseau de chaleur Foix'],
+            '10': ['Réseau de chaleur Troyes'],
+            '11': ['Réseau de chaleur Narbonne', 'Réseau de chaleur Carcassonne'],
+            '12': ['Réseau de chaleur Rodez', 'Réseau de chaleur Millau'],
+            '13': ['Réseau de chaleur Marseille Nord', 'Réseau de chaleur Marseille Sud', 'Réseau de chaleur Aix-en-Provence'],
+            '14': ['Réseau de chaleur Caen', 'Réseau de chaleur Lisieux'],
+            '15': ['Réseau de chaleur Aurillac'],
+            '16': ['Réseau de chaleur Angoulême'],
+            '17': ['Réseau de chaleur La Rochelle', 'Réseau de chaleur Rochefort'],
+            '18': ['Réseau de chaleur Bourges'],
+            '19': ['Réseau de chaleur Tulle', 'Réseau de chaleur Brive-la-Gaillarde'],
+            '21': ['Réseau de chaleur Dijon', 'Réseau de chaleur Beaune'],
+            '22': ['Réseau de chaleur Saint-Brieuc'],
+            '23': ['Réseau de chaleur Guéret'],
+            '24': ['Réseau de chaleur Périgueux'],
+            '25': ['Réseau de chaleur Besançon', 'Réseau de chaleur Montbéliard'],
+            '26': ['Réseau de chaleur Valence', 'Réseau de chaleur Romans-sur-Isère'],
+            '27': ['Réseau de chaleur Évreux'],
+            '28': ['Réseau de chaleur Chartres'],
+            '29': ['Réseau de chaleur Brest', 'Réseau de chaleur Quimper'],
+            '30': ['Réseau de chaleur Nîmes', 'Réseau de chaleur Alès'],
+            '31': ['Réseau de chaleur Toulouse Centre', 'Réseau de chaleur Toulouse Périphérie'],
+            '32': ['Réseau de chaleur Auch'],
+            '33': ['Réseau de chaleur Bordeaux Métropole', 'Réseau de chaleur Pessac'],
+            '34': ['Réseau de chaleur Montpellier', 'Réseau de chaleur Béziers'],
+            '35': ['Réseau de chaleur Rennes Métropole', 'Réseau de chaleur Saint-Malo'],
+            '36': ['Réseau de chaleur Châteauroux'],
+            '37': ['Réseau de chaleur Tours', 'Réseau de chaleur Chinon'],
+            '38': ['Réseau de chaleur Grenoble', 'Réseau de chaleur Vienne'],
+            '39': ['Réseau de chaleur Lons-le-Saunier'],
+            '40': ['Réseau de chaleur Mont-de-Marsan', 'Réseau de chaleur Dax'],
+            '41': ['Réseau de chaleur Blois'],
+            '42': ['Réseau de chaleur Saint-Étienne', 'Réseau de chaleur Roanne'],
+            '43': ['Réseau de chaleur Le Puy-en-Velay'],
+            '44': ['Réseau de chaleur Nantes Métropole', 'Réseau de chaleur Saint-Nazaire'],
+            '45': ['Réseau de chaleur Orléans'],
+            '46': ['Réseau de chaleur Cahors'],
+            '47': ['Réseau de chaleur Agen'],
+            '48': ['Réseau de chaleur Mende'],
+            '49': ['Réseau de chaleur Angers'],
+            '50': ['Réseau de chaleur Cherbourg', 'Réseau de chaleur Saint-Lô'],
+            '51': ['Réseau de chaleur Reims', 'Réseau de chaleur Châlons-en-Champagne'],
+            '52': ['Réseau de chaleur Chaumont'],
+            '53': ['Réseau de chaleur Laval'],
+            '54': ['Réseau de chaleur Nancy', 'Réseau de chaleur Vandœuvre-lès-Nancy'],
+            '55': ['Réseau de chaleur Verdun', 'Réseau de chaleur Bar-le-Duc'],
+            '56': ['Réseau de chaleur Vannes', 'Réseau de chaleur Lorient'],
+            '57': ['Réseau de chaleur Metz', 'Réseau de chaleur Thionville'],
+            '58': ['Réseau de chaleur Nevers'],
+            '59': ['Réseau de chaleur Lille Métropole', 'Réseau de chaleur Valenciennes', 'Réseau de chaleur Dunkerque'],
+            '60': ['Réseau de chaleur Beauvais', 'Réseau de chaleur Compiègne'],
+            '61': ['Réseau de chaleur Alençon'],
+            '62': ['Réseau de chaleur Arras', 'Réseau de chaleur Calais', 'Réseau de chaleur Boulogne-sur-Mer'],
+            '63': ['Réseau de chaleur Clermont-Ferrand'],
+            '64': ['Réseau de chaleur Pau', 'Réseau de chaleur Bayonne'],
+            '65': ['Réseau de chaleur Tarbes'],
+            '66': ['Réseau de chaleur Perpignan'],
+            '67': ['Réseau de chaleur Strasbourg', 'Réseau de chaleur Haguenau'],
+            '68': ['Réseau de chaleur Mulhouse', 'Réseau de chaleur Colmar'],
+            '69': ['Réseau de chaleur Lyon Part-Dieu', 'Réseau de chaleur Lyon Gerland', 'Réseau de chaleur Villeurbanne'],
+            '70': ['Réseau de chaleur Vesoul'],
+            '71': ['Réseau de chaleur Mâcon', 'Réseau de chaleur Chalon-sur-Saône'],
+            '72': ['Réseau de chaleur Le Mans'],
+            '73': ['Réseau de chaleur Chambéry'],
+            '74': ['Réseau de chaleur Annecy', 'Réseau de chaleur Thonon-les-Bains'],
+            '75': ['Réseau de chaleur Paris Centre', 'Réseau de chaleur Paris Nord', 'Réseau de chaleur Paris Sud'],
+            '76': ['Réseau de chaleur Rouen', 'Réseau de chaleur Le Havre'],
+            '77': ['Réseau de chaleur Meaux', 'Réseau de chaleur Melun'],
+            '78': ['Réseau de chaleur Versailles', 'Réseau de chaleur Saint-Germain-en-Laye'],
+            '79': ['Réseau de chaleur Niort'],
+            '80': ['Réseau de chaleur Amiens'],
+            '81': ['Réseau de chaleur Albi', 'Réseau de chaleur Castres'],
+            '82': ['Réseau de chaleur Montauban'],
+            '83': ['Réseau de chaleur Toulon', 'Réseau de chaleur Draguignan'],
+            '84': ['Réseau de chaleur Avignon', 'Réseau de chaleur Orange'],
+            '85': ['Réseau de chaleur La Roche-sur-Yon'],
+            '86': ['Réseau de chaleur Poitiers'],
+            '87': ['Réseau de chaleur Limoges'],
+            '88': ['Réseau de chaleur Épinal'],
+            '89': ['Réseau de chaleur Auxerre', 'Réseau de chaleur Sens'],
+            '90': ['Réseau de chaleur Belfort'],
+            '91': ['Réseau de chaleur Évry-Courcouronnes'],
+            '92': ['Réseau de chaleur Nanterre', 'Réseau de chaleur Boulogne-Billancourt'],
+            '93': ['Réseau de chaleur Saint-Denis', 'Réseau de chaleur Bobigny'],
+            '94': ['Réseau de chaleur Créteil', 'Réseau de chaleur Vitry-sur-Seine'],
+            '95': ['Réseau de chaleur Cergy', 'Réseau de chaleur Argenteuil']
+        };
+
+        // Base de données des entités La Poste
+        const entitiesDatabase = {
+            'Direction Régionale Nord': {
+                code_regate: 'DR-NORD-001',
+                type: 'direction_regionale',
+                collaborateurs_internes: 250,
+                collaborateurs_externes: 50,
+                surface_bureaux: 4000,
+                surface_entrepots: 2000,
+                vehicules_essence: 30,
+                vehicules_diesel: 20,
+                vehicules_electriques: 15,
+                motos_thermiques: 5,
+                km_flotte_annuel: 600000
+            },
+            'Plateforme Industrielle Lyon': {
+                code_regate: 'PI-LYON-001',
+                type: 'plateforme_industrielle',
+                collaborateurs_internes: 150,
+                collaborateurs_externes: 30,
+                surface_entrepots: 12000,
+                camions_diesel: 25,
+                km_camions_annuel: 800000,
+                transport_soustraite_tonnes_km: 1500000,
+                motos_thermiques: 3
+            },
+            'Bureau de Poste Marseille Centre': {
+                code_regate: 'BP-MARS-CENTRE-001',
+                type: 'bureau_de_poste',
+                collaborateurs_internes: 15,
+                surface_bureaux: 500,
+                vehicules_electriques: 3,
+                km_flotte_annuel: 30000,
+                motos_thermiques: 1
+            }
+        };
+
+        // Templates prédéfinis
+        const templates = {
+            'direction_regionale': {
+                nom: 'Direction régionale standard',
+                data: {
+                    collaborateurs_internes: 200,
+                    collaborateurs_externes: 40,
+                    surface_bureaux: 3000,
+                    vehicules_essence: 20,
+                    vehicules_electriques: 10,
+                    motos_thermiques: 3,
+                    km_flotte_annuel: 300000,
+                    electricite_kwh: 250000,
+                    electricite_renouvelable: 50,
+                    gaz_kwh: 80000,
+                    papier_tonnes: 5,
+                    papeterie_euros: 20000,
+                    ordinateurs_euros: 50000,
+                    repas_viande: 15000,
+                    repas_poisson: 5000,
+                    repas_vegetarien: 5000,
+                    vols_domestiques_km: 50000,
+                    train_km: 100000,
+                    motos_pro_km: 15000,
+                    dechets_recyclables_tonnes: 30,
+                    dechets_non_recyclables_tonnes: 15
+                }
+            },
+            'plateforme_industrielle': {
+                nom: 'Plateforme industrielle',
+                data: {
+                    collaborateurs_internes: 150,
+                    collaborateurs_externes: 50,
+                    surface_entrepots: 10000,
+                    camions_diesel: 20,
+                    km_camions_annuel: 500000,
+                    transport_soustraite_tonnes_km: 1000000,
+                    motos_thermiques: 5,
+                    electricite_kwh: 1000000,
+                    electricite_renouvelable: 20,
+                    fioul_litres: 50000,
+                    repas_viande: 20000,
+                    repas_vegetarien: 5000,
+                    dechets_recyclables_tonnes: 100,
+                    dechets_non_recyclables_tonnes: 80,
+                    colis_traites: 2000000,
+                    transport_marchandises_euros: 100000,
+                    emballages_euros: 50000,
+                    motos_pro_km: 25000
+                }
+            },
+            'vlp_bureau': {
+                nom: 'VLP ou bureau',
+                data: {
+                    collaborateurs_internes: 380,
+                    collaborateurs_externes: 85,
+                    surface_bureaux: 4500,
+                    vehicules_essence: 8,
+                    vehicules_electriques: 25,
+                    motos_thermiques: 2,
+                    km_flotte_annuel: 150000,
+                    electricite_kwh: 285000,
+                    gaz_kwh: 45000,
+                    papier_tonnes: 2.1,
+                    ordinateurs_euros: 45000,
+                    telephones_euros: 25000,
+                    repas_viande: 15000,
+                    repas_poisson: 8000,
+                    repas_vegetarien: 10000,
+                    vols_domestiques_km: 45000,
+                    vols_europeens_km: 18000,
+                    train_km: 25000,
+                    motos_pro_km: 8000,
+                    dechets_recyclables_tonnes: 25,
+                    dechets_non_recyclables_tonnes: 12
+                }
+            },
+            'bureau_poste': {
+                nom: 'Bureau de poste',
+                data: {
+                    collaborateurs_internes: 20,
+                    surface_bureaux: 600,
+                    vehicules_electriques: 5,
+                    motos_thermiques: 1,
+                    km_flotte_annuel: 50000,
+                    electricite_kwh: 80000,
+                    electricite_renouvelable: 70,
+                    gaz_kwh: 20000,
+                    papier_tonnes: 1,
+                    repas_viande: 2000,
+                    repas_poisson: 1000,
+                    repas_vegetarien: 1000,
+                    dechets_recyclables_tonnes: 5,
+                    dechets_non_recyclables_tonnes: 3,
+                    colis_traites: 50000,
+                    courrier_traite: 20,
+                    motos_pro_km: 3000
+                }
+            }
+        };
+
+        // Facteurs d'émission (kg CO2 eq)
+        const emissionFactors = {
+            // Transport domicile-travail (kg CO2 eq / km)
+            voiture_essence: 0.193,
+            voiture_diesel: 0.166,
+            voiture_electrique: 0.020,
+            transport_commun: 0.103,
+            velo: 0,
+            marche: 0,
+            covoiturage: 0.096,
+            moto_thermique: 0.186,
+            
+            // Flotte postale (kg CO2 eq / km)
+            vehicule_essence_flotte: 0.210,
+            vehicule_diesel_flotte: 0.180,
+            vehicule_electrique_flotte: 0.025,
+            camion_diesel: 0.850,
+            moto_thermique_flotte: 0.186,
+            
+            // Transport sous-traité (kg CO2 eq / tonne.km)
+            transport_soustraite: 0.062,
+            
+            // Déplacements professionnels (kg CO2 eq / km)
+            vol_domestique: 0.230,
+            vol_europeen: 0.187,
+            vol_intercontinental: 0.150,
+            train: 0.014,
+            moto_pro: 0.186,
+            
+            // Énergie (kg CO2 eq / kWh ou unité)
+            electricite_standard: 0.057,
+            electricite_renouvelable: 0.006,
+            gaz_naturel: 0.227,
+            fioul: 2.67,
+            
+            // Achats (kg CO2 eq / euro ou kg)
+            papier: 1840,
+            papeterie: 0.13,
+            ordinateurs: 0.45,
+            telephones: 0.32,
+            transport_marchandises: 0.19,
+            emballages: 0.28,
+            
+            // Restauration (kg CO2 eq / repas)
+            repas_viande: 5.5,
+            repas_poisson: 3.8,
+            repas_vegetarien: 1.5,
+            
+            // Déchets (kg CO2 eq / tonne)
+            dechets_recyclables: 21,
+            dechets_non_recyclables: 492,
+            dechets_dangereux: 150,
+            dechets_organiques: 85
+        };
+
+        // Fonction pour mettre à jour les réseaux de chaleur selon le code postal
+        function updateReseauChaleur() {
+            const codePostal = document.getElementById('code_postal').value;
+            const reseauSelect = document.getElementById('reseau_chaleur');
+            
+            // Vider les options existantes
+            reseauSelect.innerHTML = '<option value="">Aucun réseau de chaleur</option>';
+            
+            if (codePostal && codePostal.length >= 2) {
+                const departement = codePostal.substring(0, 2);
+                const reseaux = reseauxChaleur[departement];
+                
+                if (reseaux) {
+                    reseaux.forEach(reseau => {
+                        const option = document.createElement('option');
+                        option.value = reseau;
+                        option.textContent = reseau;
+                        reseauSelect.appendChild(option);
+                    });
+                }
+            }
+        }
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Attendre que Chart.js soit chargé
+            if (typeof Chart === 'undefined') {
+                setTimeout(() => {
+                    if (typeof Chart === 'undefined') {
+                        console.error('Chart.js n\'a pas pu être chargé');
+                        showNotification('Erreur de chargement. Veuillez rafraîchir la page.', 'error');
+                    }
+                }, 2000);
+            }
+
+            // Définir la date actuelle et l'année
+            const today = new Date();
+            document.getElementById('date_creation').value = today.toISOString().split('T')[0];
+            document.getElementById('annee').value = today.getFullYear();
+            
+            // Générer le numéro de bilan automatiquement
+            const bilanNum = `BG${today.getFullYear()}-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+            document.getElementById('bilan_numero').value = bilanNum;
+            
+            // Ajouter un mode de transport par défaut
+            addTransportMode();
+            
+            // Calculer la progression
+            updateProgress();
+            
+            // Fermer le menu si on clique ailleurs
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.hamburger-menu')) {
+                    closeAutoFillMenu();
+                }
+            });
+
+            // Vérifier que le bouton de calcul est bien configuré
+            const calculateBtn = document.getElementById('calculateBtn');
+            if (calculateBtn) {
+                console.log('Bouton de calcul trouvé et configuré');
+            }
+        });
+
+        // Gestion du menu hamburger
+        function toggleAutoFillMenu() {
+            const menu = document.getElementById('autoFillMenu');
+            const button = document.getElementById('hamburgerBtn');
+            
+            if (menu.classList.contains('show')) {
+                closeAutoFillMenu();
+            } else {
+                menu.classList.add('show');
+                button.classList.add('active');
+            }
+        }
+
+        function closeAutoFillMenu() {
+            document.getElementById('autoFillMenu').classList.remove('show');
+            document.getElementById('hamburgerBtn').classList.remove('active');
+        }
+
+        // Auto-remplissage basé sur l'email
+        function autoFillFromEmail() {
+            const email = document.getElementById('auteur_email').value;
+            if (email && email.includes('@laposte.')) {
+                const parts = email.split('@')[0].split('.');
+                if (parts.length >= 2) {
+                    document.getElementById('auteur_prenom').value = capitalize(parts[0]);
+                    document.getElementById('auteur_nom').value = capitalize(parts[1]);
+                }
+            }
+        }
+
+        // Auto-remplissage basé sur l'entité
+        function autoFillFromEntity() {
+            const entityName = document.getElementById('entite_nom').value;
+            
+            // Chercher dans la base de données
+            if (entitiesDatabase[entityName]) {
+                const entityData = entitiesDatabase[entityName];
+                
+                // Remplir les champs automatiques
+                document.getElementById('code_regate').value = entityData.code_regate;
+                document.getElementById('type_entite').value = entityData.type;
+                
+                // Remplir les autres sections
+                Object.keys(entityData).forEach(key => {
+                    if (key !== 'code_regate' && key !== 'type') {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = entityData[key];
+                        }
+                    }
+                });
+                
+                showNotification('Données pré-remplies pour ' + entityName, 'success');
+            }
+            
+            updateProgress();
+        }
+
+        // Appliquer un template
+        function applyTemplate(templateName) {
+            if (templates[templateName]) {
+                const template = templates[templateName];
+                fillFormWithData(template.data);
+                showNotification(`Template "${template.nom}" appliqué`, 'success');
+                closeAutoFillMenu();
+                updateProgress();
+            }
+        }
+
+        // Remplir avec des données d'exemple
+        function fillWithSampleData() {
+            const sampleData = {
+                bilan_numero: 'BG2024-SAMPLE',
+                auteur_nom: 'Dupont',
+                auteur_prenom: 'Marie',
+                auteur_email: 'marie.dupont@laposte.fr',
+                entite_nom: 'Direction Régionale Île-de-France',
+                code_regate: 'DR-IDF-001',
+                type_entite: 'direction_regionale',
+                collaborateurs_internes: 250,
+                collaborateurs_externes: 50,
+                surface_bureaux: 4000,
+                surface_entrepots: 2000,
+                annee_construction: 1995,
+                vehicules_essence: 30,
+                vehicules_diesel: 20,
+                vehicules_electriques: 10,
+                motos_thermiques: 5,
+                km_flotte_annuel: 500000,
+                transport_soustraite_tonnes_km: 200000,
+                colis_traites: 1000000,
+                vols_domestiques_km: 50000,
+                train_km: 100000,
+                motos_pro_km: 15000,
+                papier_tonnes: 10,
+                ordinateurs_euros: 50000,
+                repas_viande: 20000,
+                repas_poisson: 10000,
+                repas_vegetarien: 10000,
+                electricite_kwh: 600000,
+                electricite_renouvelable: 30,
+                gaz_kwh: 200000,
+                dechets_recyclables_tonnes: 80,
+                dechets_non_recyclables_tonnes: 40
+            };
+
+            fillFormWithData(sampleData);
+            
+            // Ajouter des modes de transport
+            const transportContainer = document.getElementById('transportModesContainer');
+            transportContainer.innerHTML = '';
+            
+            addTransportModeWithData('voiture_essence', 15, 5);
+            addTransportModeWithData('transport_commun', 20, 5);
+            addTransportModeWithData('velo', 5, 5);
+            addTransportModeWithData('moto_thermique', 3, 2);
+            
+            showNotification('Données d\'exemple chargées', 'success');
+            closeAutoFillMenu();
+        }
+
+        // Remplir avec des données historiques
+        function fillWithHistoricalData() {
+            const lastYearData = {
+                collaborateurs_internes: 240,
+                collaborateurs_externes: 48,
+                surface_bureaux: 3800,
+                vehicules_essence: 35,
+                vehicules_diesel: 18,
+                vehicules_electriques: 12,
+                motos_thermiques: 4,
+                km_flotte_annuel: 480000,
+                electricite_kwh: 580000,
+                electricite_renouvelable: 25,
+                gaz_kwh: 210000,
+                repas_viande: 19000,
+                repas_poisson: 9500,
+                repas_vegetarien: 9500,
+                dechets_recyclables_tonnes: 75,
+                dechets_non_recyclables_tonnes: 42,
+                motos_pro_km: 12000
+            };
+            
+            // Appliquer une légère amélioration (simulation d'efforts environnementaux)
+            Object.keys(lastYearData).forEach(key => {
+                let value = lastYearData[key];
+                
+                // Réduction pour certains postes
+                if (key.includes('essence') || key.includes('diesel') || 
+                    key.includes('dechets_non_recyclables') || key === 'gaz_kwh' ||
+                    key.includes('moto')) {
+                    value = Math.round(value * 0.95); // -5%
+                }
+                
+                // Augmentation pour les efforts verts
+                if (key.includes('electrique') || key.includes('renouvelable') || 
+                    key.includes('vegetarien') || key.includes('recyclables')) {
+                    value = Math.round(value * 1.1); // +10%
+                }
+                
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = value;
+                }
+            });
+            
+            showNotification('Données historiques adaptées chargées', 'success');
+            closeAutoFillMenu();
+        }
+
+        // Fonctions utilitaires
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+
+        function fillFormWithData(data) {
+            for (const [key, value] of Object.entries(data)) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = value;
+                }
+            }
+            updateProgress();
+        }
+
+        // Gestion des sections
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const isActive = header.classList.contains('active');
+            
+            header.classList.toggle('active');
+            content.classList.toggle('active');
+            
+            updateProgress();
+        }
+
+        // Mise à jour de la barre de progression
+        function updateProgress() {
+            const form = document.getElementById('bilanGESForm');
+            const inputs = form.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], select');
+            const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+            const progress = (filledInputs.length / inputs.length) * 100;
+            
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // Gestion des modes de transport
+        function addTransportMode() {
+            transportModeCounter++;
+            const container = document.getElementById('transportModesContainer');
+            
+            const modeDiv = document.createElement('div');
+            modeDiv.className = 'transport-mode-item';
+            modeDiv.innerHTML = `
+                <select name="transport_mode_${transportModeCounter}" class="manual-field">
+                    <option value="">Sélectionner un mode</option>
+                    <option value="voiture_essence">Voiture essence</option>
+                    <option value="voiture_diesel">Voiture diesel</option>
+                    <option value="voiture_electrique">Voiture électrique</option>
+                    <option value="transport_commun">Transport en commun</option>
+                    <option value="velo">Vélo</option>
+                    <option value="marche">Marche à pied</option>
+                    <option value="covoiturage">Covoiturage</option>
+                    <option value="moto_thermique">Moto thermique</option>
+                </select>
+                <input type="number" name="transport_distance_${transportModeCounter}" class="manual-field" placeholder="Distance (km)" min="0" step="0.1">
+                <input type="number" name="transport_frequence_${transportModeCounter}" class="manual-field" placeholder="Jours/semaine" min="0" max="7" step="1">
+                <button type="button" class="remove-transport-btn" onclick="removeTransportMode(this)">✕</button>
+            `;
+            
+            container.appendChild(modeDiv);
+        }
+
+        function addTransportModeWithData(mode, distance, frequency) {
+            transportModeCounter++;
+            const container = document.getElementById('transportModesContainer');
+            
+            const modeDiv = document.createElement('div');
+            modeDiv.className = 'transport-mode-item';
+            modeDiv.innerHTML = `
+                <select name="transport_mode_${transportModeCounter}" class="manual-field">
+                    <option value="">Sélectionner un mode</option>
+                    <option value="voiture_essence" ${mode === 'voiture_essence' ? 'selected' : ''}>Voiture essence</option>
+                    <option value="voiture_diesel" ${mode === 'voiture_diesel' ? 'selected' : ''}>Voiture diesel</option>
+                    <option value="voiture_electrique" ${mode === 'voiture_electrique' ? 'selected' : ''}>Voiture électrique</option>
+                    <option value="transport_commun" ${mode === 'transport_commun' ? 'selected' : ''}>Transport en commun</option>
+                    <option value="velo" ${mode === 'velo' ? 'selected' : ''}>Vélo</option>
+                    <option value="marche" ${mode === 'marche' ? 'selected' : ''}>Marche à pied</option>
+                    <option value="covoiturage" ${mode === 'covoiturage' ? 'selected' : ''}>Covoiturage</option>
+                    <option value="moto_thermique" ${mode === 'moto_thermique' ? 'selected' : ''}>Moto thermique</option>
+                </select>
+                <input type="number" name="transport_distance_${transportModeCounter}" class="manual-field" placeholder="Distance (km)" min="0" step="0.1" value="${distance}">
+                <input type="number" name="transport_frequence_${transportModeCounter}" class="manual-field" placeholder="Jours/semaine" min="0" max="7" step="1" value="${frequency}">
+                <button type="button" class="remove-transport-btn" onclick="removeTransportMode(this)">✕</button>
+            `;
+            
+            container.appendChild(modeDiv);
+        }
+
+        function removeTransportMode(button) {
+            button.parentElement.remove();
+            updateProgress();
+        }
+
+        // Calcul du bilan
+        function calculerBilan() {
+            const results = {
+                transport_domicile: 0,
+                flotte_postale: 0,
+                transport_soustraite: 0,
+                deplacements_pro: 0,
+                energie: 0,
+                achats: 0,
+                restauration: 0,
+                dechets: 0,
+                details: {
+                    transport_domicile: {},
+                    flotte_postale: {},
+                    transport_soustraite: {},
+                    deplacements_pro: {},
+                    energie: {},
+                    achats: {},
+                    restauration: {},
+                    dechets: {}
+                }
+            };
+
+            // 1. Transport domicile-travail
+            const transportModes = document.querySelectorAll('.transport-mode-item');
+            const multiplierDistance = document.getElementById('multiplier_distance').checked;
+            const multiplier = multiplierDistance ? 2 : 1;
+
+            transportModes.forEach((item, index) => {
+                const mode = item.querySelector(`select[name^="transport_mode"]`).value;
+                const distance = parseFloat(item.querySelector(`input[name^="transport_distance"]`).value) || 0;
+                const frequence = parseFloat(item.querySelector(`input[name^="transport_frequence"]`).value) || 0;
+                
+                if (mode && distance && frequence) {
+                    const yearlyDistance = distance * multiplier * frequence * 46; // semaines travaillées
+                    const emissions = (yearlyDistance * emissionFactors[mode]) / 1000;
+                    results.transport_domicile += emissions;
+                    results.details.transport_domicile[mode] = (results.details.transport_domicile[mode] || 0) + emissions;
+                }
+            });
+
+            // 2. Flotte postale
+            const vehiculesEssence = parseFloat(document.getElementById('vehicules_essence').value) || 0;
+            const vehiculesDiesel = parseFloat(document.getElementById('vehicules_diesel').value) || 0;
+            const vehiculesElectriques = parseFloat(document.getElementById('vehicules_electriques').value) || 0;
+            const motosThermiques = parseFloat(document.getElementById('motos_thermiques').value) || 0;
+            const kmFlotteAnnuel = parseFloat(document.getElementById('km_flotte_annuel').value) || 0;
+            const camionsDiesel = parseFloat(document.getElementById('camions_diesel').value) || 0;
+            const kmCamionsAnnuel = parseFloat(document.getElementById('km_camions_annuel').value) || 0;
+
+            const totalVehicules = vehiculesEssence + vehiculesDiesel + vehiculesElectriques + motosThermiques;
+            
+            if (totalVehicules > 0 && kmFlotteAnnuel > 0) {
+                const kmParVehicule = kmFlotteAnnuel / totalVehicules;
+                
+                if (vehiculesEssence > 0) {
+                    const emissions = (vehiculesEssence * kmParVehicule * emissionFactors.vehicule_essence_flotte) / 1000;
+                    results.flotte_postale += emissions;
+                    results.details.flotte_postale.vehicules_essence = emissions;
+                }
+                
+                if (vehiculesDiesel > 0) {
+                    const emissions = (vehiculesDiesel * kmParVehicule * emissionFactors.vehicule_diesel_flotte) / 1000;
+                    results.flotte_postale += emissions;
+                    results.details.flotte_postale.vehicules_diesel = emissions;
+                }
+                
+                if (vehiculesElectriques > 0) {
+                    const emissions = (vehiculesElectriques * kmParVehicule * emissionFactors.vehicule_electrique_flotte) / 1000;
+                    results.flotte_postale += emissions;
+                    results.details.flotte_postale.vehicules_electriques = emissions;
+                }
+
+                if (motosThermiques > 0) {
+                    const emissions = (motosThermiques * kmParVehicule * emissionFactors.moto_thermique_flotte) / 1000;
+                    results.flotte_postale += emissions;
+                    results.details.flotte_postale.motos_thermiques = emissions;
+                }
+            }
+            
+            if (camionsDiesel > 0 && kmCamionsAnnuel > 0) {
+                const emissions = (kmCamionsAnnuel * emissionFactors.camion_diesel) / 1000;
+                results.flotte_postale += emissions;
+                results.details.flotte_postale.camions_diesel = emissions;
+            }
+
+            // 3. Transport sous-traité
+            const transportSoustraiteTonnesKm = parseFloat(document.getElementById('transport_soustraite_tonnes_km').value) || 0;
+            if (transportSoustraiteTonnesKm > 0) {
+                const emissions = (transportSoustraiteTonnesKm * emissionFactors.transport_soustraite) / 1000;
+                results.transport_soustraite += emissions;
+                results.details.transport_soustraite.tonnes_km = emissions;
+            }
+
+            // 4. Déplacements professionnels
+            const volsDomestiques = parseFloat(document.getElementById('vols_domestiques_km').value) || 0;
+            const volsEuropeens = parseFloat(document.getElementById('vols_europeens_km').value) || 0;
+            const volsInternationaux = parseFloat(document.getElementById('vols_internationaux_km').value) || 0;
+            const trainKm = parseFloat(document.getElementById('train_km').value) || 0;
+            const motosProKm = parseFloat(document.getElementById('motos_pro_km').value) || 0;
+
+            if (volsDomestiques > 0) {
+                const emissions = (volsDomestiques * emissionFactors.vol_domestique) / 1000;
+                results.deplacements_pro += emissions;
+                results.details.deplacements_pro.vols_domestiques = emissions;
+            }
+
+            if (volsEuropeens > 0) {
+                const emissions = (volsEuropeens * emissionFactors.vol_europeen) / 1000;
+                results.deplacements_pro += emissions;
+                results.details.deplacements_pro.vols_europeens = emissions;
+            }
+
+            if (volsInternationaux > 0) {
+                const emissions = (volsInternationaux * emissionFactors.vol_intercontinental) / 1000;
+                results.deplacements_pro += emissions;
+                results.details.deplacements_pro.vols_internationaux = emissions;
+            }
+
+            if (trainKm > 0) {
+                const emissions = (trainKm * emissionFactors.train) / 1000;
+                results.deplacements_pro += emissions;
+                results.details.deplacements_pro.train = emissions;
+            }
+
+            if (motosProKm > 0) {
+                const emissions = (motosProKm * emissionFactors.moto_pro) / 1000;
+                results.deplacements_pro += emissions;
+                results.details.deplacements_pro.motos_pro = emissions;
+            }
+
+            // 5. Énergie
+            const electriciteKwh = parseFloat(document.getElementById('electricite_kwh').value) || 0;
+            const electriciteRenouvelable = parseFloat(document.getElementById('electricite_renouvelable').value) || 0;
+            const gazKwh = parseFloat(document.getElementById('gaz_kwh').value) || 0;
+            const fioulLitres = parseFloat(document.getElementById('fioul_litres').value) || 0;
+
+            if (electriciteKwh > 0) {
+                const pourcentageStandard = (100 - electriciteRenouvelable) / 100;
+                const pourcentageRenouvelable = electriciteRenouvelable / 100;
+                
+                const emissionsStandard = (electriciteKwh * pourcentageStandard * emissionFactors.electricite_standard) / 1000;
+                const emissionsRenouvelable = (electriciteKwh * pourcentageRenouvelable * emissionFactors.electricite_renouvelable) / 1000;
+                
+                results.energie += emissionsStandard + emissionsRenouvelable;
+                results.details.energie.electricite_standard = emissionsStandard;
+                results.details.energie.electricite_renouvelable = emissionsRenouvelable;
+            }
+
+            if (gazKwh > 0) {
+                const emissions = (gazKwh * emissionFactors.gaz_naturel) / 1000;
+                results.energie += emissions;
+                results.details.energie.gaz_naturel = emissions;
+            }
+
+            if (fioulLitres > 0) {
+                const emissions = (fioulLitres * emissionFactors.fioul) / 1000;
+                results.energie += emissions;
+                results.details.energie.fioul = emissions;
+            }
+
+            // 6. Achats
+            const papierTonnes = parseFloat(document.getElementById('papier_tonnes').value) || 0;
+            const papeterieEuros = parseFloat(document.getElementById('papeterie_euros').value) || 0;
+            const ordinateursEuros = parseFloat(document.getElementById('ordinateurs_euros').value) || 0;
+            const telephonesEuros = parseFloat(document.getElementById('telephones_euros').value) || 0;
+            const transportMarchandisesEuros = parseFloat(document.getElementById('transport_marchandises_euros').value) || 0;
+            const emballagesEuros = parseFloat(document.getElementById('emballages_euros').value) || 0;
+
+            if (papierTonnes > 0) {
+                const emissions = (papierTonnes * emissionFactors.papier) / 1000;
+                results.achats += emissions;
+                results.details.achats.papier = emissions;
+            }
+
+            if (papeterieEuros > 0) {
+                const emissions = (papeterieEuros * emissionFactors.papeterie) / 1000;
+                results.achats += emissions;
+                results.details.achats.papeterie = emissions;
+            }
+
+            if (ordinateursEuros > 0) {
+                const emissions = (ordinateursEuros * emissionFactors.ordinateurs) / 1000;
+                results.achats += emissions;
+                results.details.achats.ordinateurs = emissions;
+            }
+
+            if (telephonesEuros > 0) {
+                const emissions = (telephonesEuros * emissionFactors.telephones) / 1000;
+                results.achats += emissions;
+                results.details.achats.telephones = emissions;
+            }
+
+            if (transportMarchandisesEuros > 0) {
+                const emissions = (transportMarchandisesEuros * emissionFactors.transport_marchandises) / 1000;
+                results.achats += emissions;
+                results.details.achats.transport_marchandises = emissions;
+            }
+
+            if (emballagesEuros > 0) {
+                const emissions = (emballagesEuros * emissionFactors.emballages) / 1000;
+                results.achats += emissions;
+                results.details.achats.emballages = emissions;
+            }
+
+            // 7. Restauration
+            const repasViande = parseFloat(document.getElementById('repas_viande').value) || 0;
+            const repasPoisson = parseFloat(document.getElementById('repas_poisson').value) || 0;
+            const repasVegetarien = parseFloat(document.getElementById('repas_vegetarien').value) || 0;
+
+            if (repasViande > 0) {
+                const emissions = (repasViande * emissionFactors.repas_viande) / 1000;
+                results.restauration += emissions;
+                results.details.restauration.repas_viande = emissions;
+            }
+
+            if (repasPoisson > 0) {
+                const emissions = (repasPoisson * emissionFactors.repas_poisson) / 1000;
+                results.restauration += emissions;
+                results.details.restauration.repas_poisson = emissions;
+            }
+
+            if (repasVegetarien > 0) {
+                const emissions = (repasVegetarien * emissionFactors.repas_vegetarien) / 1000;
+                results.restauration += emissions;
+                results.details.restauration.repas_vegetarien = emissions;
+            }
+
+            // 8. Déchets
+            const dechetsRecyclables = parseFloat(document.getElementById('dechets_recyclables_tonnes').value) || 0;
+            const dechetsNonRecyclables = parseFloat(document.getElementById('dechets_non_recyclables_tonnes').value) || 0;
+            const dechetsDangereux = parseFloat(document.getElementById('dechets_dangereux_tonnes').value) || 0;
+            const dechetsOrganiques = parseFloat(document.getElementById('dechets_organiques_tonnes').value) || 0;
+
+            if (dechetsRecyclables > 0) {
+                const emissions = (dechetsRecyclables * emissionFactors.dechets_recyclables) / 1000;
+                results.dechets += emissions;
+                results.details.dechets.dechets_recyclables = emissions;
+            }
+
+            if (dechetsNonRecyclables > 0) {
+                const emissions = (dechetsNonRecyclables * emissionFactors.dechets_non_recyclables) / 1000;
+                results.dechets += emissions;
+                results.details.dechets.dechets_non_recyclables = emissions;
+            }
+
+            if (dechetsDangereux > 0) {
+                const emissions = (dechetsDangereux * emissionFactors.dechets_dangereux) / 1000;
+                results.dechets += emissions;
+                results.details.dechets.dechets_dangereux = emissions;
+            }
+
+            if (dechetsOrganiques > 0) {
+                const emissions = (dechetsOrganiques * emissionFactors.dechets_organiques) / 1000;
+                results.dechets += emissions;
+                results.details.dechets.dechets_organiques = emissions;
+            }
+
+            // Sauvegarder les résultats actuels
+            currentResults = results;
+            scenarios.current = { ...results };
+
+            // Afficher les résultats
+            displayResults(results);
+        }
+
+        // Affichage des résultats
+        function displayResults(results) {
+            const total = Object.keys(results)
+                .filter(key => key !== 'details')
+                .reduce((sum, key) => sum + results[key], 0);
+            
+            // Afficher le total
+            document.getElementById('totalEmissions').textContent = total.toFixed(2);
+            
+            // Calculer et afficher les scopes
+            const scopes = calculateScopes(results);
+            document.getElementById('scope1Value').textContent = scopes.scope1.toFixed(1) + ' t';
+            document.getElementById('scope2Value').textContent = scopes.scope2.toFixed(1) + ' t';
+            document.getElementById('scope3Value').textContent = scopes.scope3.toFixed(1) + ' t';
+            
+            // Afficher les graphiques avec légendes améliorées
+            createCharts(results, total);
+            
+            // Générer les recommandations
+            generateRecommendations(results, total);
+            
+            // Afficher les résultats détaillés
+            createDetailedResults(results);
+            
+            // Afficher la section résultats
+            const resultsSection = document.getElementById('results');
+            resultsSection.classList.remove('hidden');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+            
+            showNotification('Calcul terminé avec succès !', 'success');
+        }
+
+        // Calcul des scopes
+        function calculateScopes(results) {
+            // Scope 1: Émissions directes (flotte propre, chauffage)
+            const scope1 = results.flotte_postale + (results.energie * 0.3); // Part chauffage direct
+            
+            // Scope 2: Électricité et réseaux de chaleur
+            const scope2 = results.energie * 0.7; // Part électricité
+            
+            // Scope 3: Autres émissions indirectes
+            const scope3 = results.transport_domicile + results.transport_soustraite + 
+                          results.deplacements_pro + results.achats + 
+                          results.restauration + results.dechets;
+            
+            return { scope1, scope2, scope3 };
+        }
+
+        // Création des graphiques avec info-bulles améliorées
+        function createCharts(results, total) {
+            // Vérifier que Chart.js est chargé
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js n\'est pas chargé');
+                showNotification('Erreur: Chart.js non chargé. Veuillez recharger la page.', 'error');
+                return;
+            }
+
+            // Détruire les graphiques existants
+            Object.values(chartInstances).forEach(chart => {
+                if (chart && typeof chart.destroy === 'function') {
+                    chart.destroy();
+                }
+            });
+            chartInstances = {};
+
+            // Configuration commune pour les graphiques
+            const chartDefaults = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: window.innerWidth < 768 ? 10 : 12,
+                                family: 'Arial'
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 58, 112, 0.9)',
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed || context.raw;
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                return `${context.label}: ${value.toFixed(2)} tonnes CO₂ eq/an (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Graphique camembert
+            const categoryCanvas = document.getElementById('categoryChart');
+            if (categoryCanvas) {
+                const categoryCtx = categoryCanvas.getContext('2d');
+                chartInstances.category = new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [
+                            'Transport domicile-travail', 
+                            'Flotte postale', 
+                            'Transport sous-traité',
+                            'Déplacements pro',
+                            'Énergie', 
+                            'Achats', 
+                            'Restauration',
+                            'Déchets'
+                        ],
+                        datasets: [{
+                            data: [
+                                results.transport_domicile, 
+                                results.flotte_postale, 
+                                results.transport_soustraite,
+                                results.deplacements_pro,
+                                results.energie, 
+                                results.achats, 
+                                results.restauration,
+                                results.dechets
+                            ],
+                            backgroundColor: [
+                                '#003A70', '#1E5A96', '#3B7BC7', 
+                                '#FFCC00', '#FFD633', '#00A651', 
+                                '#33C481', '#E60028'
+                            ],
+                            borderWidth: 3,
+                            borderColor: '#fff',
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        ...chartDefaults,
+                        plugins: {
+                            ...chartDefaults.plugins,
+                            legend: {
+                                position: window.innerWidth < 768 ? 'bottom' : 'right',
+                                labels: {
+                                    usePointStyle: true,
+                                    pointStyle: 'circle',
+                                    padding: 15,
+                                    font: {
+                                        size: window.innerWidth < 768 ? 10 : 12
+                                    }
+                                }
+                            }
+                        },
+                        cutout: '50%'
+                    }
+                });
+            }
+
+            // Graphique histogramme
+            const collaborateurs = (parseFloat(document.getElementById('collaborateurs_internes')?.value) || 0) + 
+                                  (parseFloat(document.getElementById('collaborateurs_externes')?.value) || 0);
+            
+            const perEmployeeCanvas = document.getElementById('perEmployeeChart');
+            if (perEmployeeCanvas) {
+                const perEmployeeCtx = perEmployeeCanvas.getContext('2d');
+                chartInstances.perEmployee = new Chart(perEmployeeCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: window.innerWidth < 768 ? 
+                            ['Transport', 'Flotte', 'Sous-traité', 'Dépl. pro', 'Énergie', 'Achats', 'Resto', 'Déchets'] :
+                            ['Transport\ndomicile', 'Flotte\npostale', 'Transport\nsous-traité', 'Déplacements\npro', 'Énergie', 'Achats', 'Restauration', 'Déchets'],
+                        datasets: [{
+                            label: 't CO₂ / collaborateur / an',
+                            data: collaborateurs > 0 ? [
+                                results.transport_domicile / collaborateurs,
+                                results.flotte_postale / collaborateurs,
+                                results.transport_soustraite / collaborateurs,
+                                results.deplacements_pro / collaborateurs,
+                                results.energie / collaborateurs,
+                                results.achats / collaborateurs,
+                                results.restauration / collaborateurs,
+                                results.dechets / collaborateurs
+                            ] : [0, 0, 0, 0, 0, 0, 0, 0],
+                            backgroundColor: [
+                                '#003A70', '#1E5A96', '#3B7BC7', 
+                                '#FFCC00', '#FFD633', '#00A651', 
+                                '#33C481', '#E60028'
+                            ],
+                            borderColor: [
+                                '#002855', '#164A7A', '#2E63A5', 
+                                '#E6B800', '#E6C200', '#008040', 
+                                '#29A367', '#CC0020'
+                            ],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            hoverBackgroundColor: [
+                                '#004080', '#2563A0', '#4285D0',
+                                '#FFD633', '#FFE066', '#00B359',
+                                '#3ED18C', '#FF0030'
+                            ]
+                        }]
+                    },
+                    options: {
+                        ...chartDefaults,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'tonnes CO₂ eq / collaborateur / an',
+                                    font: {
+                                        size: window.innerWidth < 768 ? 12 : 14,
+                                        weight: 'bold'
+                                    }
+                                },
+                                grid: {
+                                    color: '#e0e0e0',
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: window.innerWidth >= 768,
+                                    text: 'Catégories d\'émissions',
+                                    font: {
+                                        size: 14,
+                                        weight: 'bold'
+                                    }
+                                },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    font: {
+                                        size: window.innerWidth < 768 ? 9 : 11
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        },
+                        plugins: {
+                            ...chartDefaults.plugins,
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                ...chartDefaults.plugins.tooltip,
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw.toFixed(3)} tonnes CO₂ eq/an`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Génération des recommandations basées sur les résultats
+        function generateRecommendations(results, total) {
+            const recommendations = [];
+            
+            // Analyser les postes les plus émissifs
+            const emissions = [
+                { name: 'transport_domicile', value: results.transport_domicile, label: 'Transport domicile-travail' },
+                { name: 'flotte_postale', value: results.flotte_postale, label: 'Flotte postale' },
+                { name: 'transport_soustraite', value: results.transport_soustraite, label: 'Transport sous-traité' },
+                { name: 'deplacements_pro', value: results.deplacements_pro, label: 'Déplacements professionnels' },
+                { name: 'energie', value: results.energie, label: 'Énergie' },
+                { name: 'achats', value: results.achats, label: 'Achats' },
+                { name: 'restauration', value: results.restauration, label: 'Restauration' },
+                { name: 'dechets', value: results.dechets, label: 'Déchets' }
+            ].sort((a, b) => b.value - a.value);
+
+            // Recommandations pour le poste le plus émissif
+            const topEmission = emissions[0];
+            const percentage = (topEmission.value / total * 100).toFixed(1);
+            
+            switch (topEmission.name) {
+                case 'transport_domicile':
+                    recommendations.push({
+                        title: 'Plan de mobilité durable',
+                        description: `Les déplacements domicile-travail représentent ${percentage}% de vos émissions. Encouragez l'usage des transports en commun, du covoiturage et du vélo.`,
+                        priority: 'high',
+                        impact: `Réduction potentielle : ${(topEmission.value * 0.3).toFixed(1)} t CO₂ eq/an`
+                    });
+                    break;
+                    
+                case 'flotte_postale':
+                    recommendations.push({
+                        title: 'Électrification de la flotte',
+                        description: `La flotte postale représente ${percentage}% de vos émissions. Accélérez le passage aux véhicules électriques et formez à l'éco-conduite.`,
+                        priority: 'high',
+                        impact: `Réduction potentielle : ${(topEmission.value * 0.4).toFixed(1)} t CO₂ eq/an`
+                    });
+                    break;
+                    
+                case 'energie':
+                    recommendations.push({
+                        title: 'Transition énergétique',
+                        description: `L'énergie représente ${percentage}% de vos émissions. Passez aux énergies renouvelables et améliorez l'efficacité énergétique des bâtiments.`,
+                        priority: 'high',
+                        impact: `Réduction potentielle : ${(topEmission.value * 0.5).toFixed(1)} t CO₂ eq/an`
+                    });
+                    break;
+                    
+                case 'transport_soustraite':
+                    recommendations.push({
+                        title: 'Optimisation logistique',
+                        description: `Le transport sous-traité représente ${percentage}% de vos émissions. Négociez avec des prestataires bas-carbone et optimisez les tournées.`,
+                        priority: 'medium',
+                        impact: `Réduction potentielle : ${(topEmission.value * 0.2).toFixed(1)} t CO₂ eq/an`
+                    });
+                    break;
+                    
+                default:
+                    recommendations.push({
+                        title: 'Action prioritaire',
+                        description: `${topEmission.label} représente ${percentage}% de vos émissions. C'est votre levier d'action prioritaire.`,
+                        priority: 'high',
+                        impact: `Focus recommandé sur ce poste`
+                    });
+            }
+
+            // Recommandations générales selon le niveau d'émissions
+            const collaborateurs = (parseFloat(document.getElementById('collaborateurs_internes')?.value) || 0) + 
+                                  (parseFloat(document.getElementById('collaborateurs_externes')?.value) || 0);
+            const emissionsParCollaborateur = collaborateurs > 0 ? total / collaborateurs : 0;
+
+            if (emissionsParCollaborateur > 5) {
+                recommendations.push({
+                    title: 'Sensibilisation climat urgente',
+                    description: 'Vos émissions par collaborateur sont élevées (> 5 t CO₂). Lancez un plan de sensibilisation et de formation aux enjeux climatiques.',
+                    priority: 'high',
+                    impact: 'Engagement de tous les collaborateurs'
+                });
+            } else if (emissionsParCollaborateur > 2) {
+                recommendations.push({
+                    title: 'Amélioration continue',
+                    description: 'Vos émissions sont dans la moyenne. Mettez en place des actions d\'amélioration continue et un suivi régulier.',
+                    priority: 'medium',
+                    impact: 'Réduction progressive des émissions'
+                });
+            } else {
+                recommendations.push({
+                    title: 'Maintien des efforts',
+                    description: 'Félicitations ! Vos émissions sont faibles. Maintenez vos efforts et partagez vos bonnes pratiques.',
+                    priority: 'low',
+                    impact: 'Exemplarité environnementale'
+                });
+            }
+
+            // Recommandations spécifiques selon les données
+            const electriciteRenouvelable = parseFloat(document.getElementById('electricite_renouvelable')?.value) || 0;
+            if (electriciteRenouvelable < 50) {
+                recommendations.push({
+                    title: 'Électricité verte',
+                    description: 'Augmentez votre part d\'électricité renouvelable. Objectif : 100% d\'ici 2030.',
+                    priority: 'medium',
+                    impact: `Réduction : ${(results.energie * 0.3).toFixed(1)} t CO₂ eq/an`
+                });
+            }
+
+            const repasViande = parseFloat(document.getElementById('repas_viande')?.value) || 0;
+            const repasVegetarien = parseFloat(document.getElementById('repas_vegetarien')?.value) || 0;
+            if (repasViande > repasVegetarien * 2) {
+                recommendations.push({
+                    title: 'Restauration durable',
+                    description: 'Proposez plus d\'options végétariennes et privilégiez les circuits courts et bio.',
+                    priority: 'low',
+                    impact: `Réduction : ${(results.restauration * 0.2).toFixed(1)} t CO₂ eq/an`
+                });
+            }
+
+            // Afficher les recommandations
+            displayRecommendations(recommendations);
+        }
+
+        // Affichage des recommandations
+        function displayRecommendations(recommendations) {
+            const container = document.getElementById('recommendationsContainer');
+            container.innerHTML = '';
+
+            recommendations.forEach(rec => {
+                const recDiv = document.createElement('div');
+                recDiv.className = 'recommendation-card';
+                
+                recDiv.innerHTML = `
+                    <div class="recommendation-priority priority-${rec.priority}">
+                        ${rec.priority === 'high' ? 'Priorité élevée' : 
+                          rec.priority === 'medium' ? 'Priorité moyenne' : 'Priorité faible'}
+                    </div>
+                    <div class="recommendation-title">${rec.title}</div>
+                    <div class="recommendation-description">${rec.description}</div>
+                    <div class="recommendation-impact">${rec.impact}</div>
+                `;
+                
+                container.appendChild(recDiv);
+            });
+        }
+
+        // Création des résultats détaillés
+        function createDetailedResults(results) {
+            const container = document.getElementById('detailedResultsContainer');
+            container.innerHTML = '';
+
+            const categories = [
+                { name: 'transport_domicile', value: results.transport_domicile, details: results.details.transport_domicile, icon: '🏠🚗' },
+                { name: 'flotte_postale', value: results.flotte_postale, details: results.details.flotte_postale, icon: '🚚' },
+                { name: 'transport_soustraite', value: results.transport_soustraite, details: results.details.transport_soustraite, icon: '🚛' },
+                { name: 'deplacements_pro', value: results.deplacements_pro, details: results.details.deplacements_pro, icon: '✈️' },
+                { name: 'energie', value: results.energie, details: results.details.energie, icon: '⚡' },
+                { name: 'achats', value: results.achats, details: results.details.achats, icon: '🛒' },
+                { name: 'restauration', value: results.restauration, details: results.details.restauration, icon: '🍽️' },
+                { name: 'dechets', value: results.dechets, details: results.details.dechets, icon: '🗑️' }
+            ];
+
+            const categoryNames = {
+                'transport_domicile': 'Transport domicile-travail',
+                'flotte_postale': 'Flotte postale',
+                'transport_soustraite': 'Transport sous-traité',
+                'deplacements_pro': 'Déplacements professionnels',
+                'energie': 'Énergie',
+                'achats': 'Achats',
+                'restauration': 'Restauration',
+                'dechets': 'Déchets'
+            };
+
+            categories.forEach(category => {
+                if (category.value > 0) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'result-category';
+                    
+                    const headerDiv = document.createElement('div');
+                    headerDiv.className = 'category-header';
+                    headerDiv.innerHTML = `
+                        <span class="category-title">${category.icon} ${categoryNames[category.name]}</span>
+                        <span class="category-total">${category.value.toFixed(2)} t CO₂</span>
+                    `;
+                    
+                    const detailsDiv = document.createElement('div');
+                    detailsDiv.className = 'category-details';
+                    
+                    for (const [key, value] of Object.entries(category.details)) {
+                        if (value > 0) {
+                            const detailItem = document.createElement('div');
+                            detailItem.className = 'detail-item';
+                            
+                            const displayName = key.replace(/_/g, ' ')
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(' ');
+                            
+                            detailItem.innerHTML = `
+                                <span>${displayName}</span>
+                                <span><strong>${value.toFixed(3)} t CO₂</strong></span>
+                            `;
+                            detailsDiv.appendChild(detailItem);
+                        }
+                    }
+                    
+                    headerDiv.onclick = () => {
+                        const isActive = detailsDiv.classList.contains('active');
+                        detailsDiv.classList.toggle('active');
+                        headerDiv.classList.toggle('active');
+                    };
+
+                    categoryDiv.appendChild(headerDiv);
+                    categoryDiv.appendChild(detailsDiv);
+                    container.appendChild(categoryDiv);
+                }
+            });
+        }
+
+        // Gestion de la comparaison de scénarios
+        function showComparison() {
+            if (!currentResults) {
+                showNotification('Veuillez d\'abord calculer un bilan', 'error');
+                return;
+            }
+            
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('comparison').classList.remove('hidden');
+            
+            // Créer le scénario optimisé automatiquement
+            createOptimizedScenario();
+            
+            // Afficher la comparaison
+            displayScenarioComparison();
+        }
+
+        function hideComparison() {
+            document.getElementById('comparison').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+        }
+
+        function selectScenario(scenarioType) {
+            // Mettre à jour les boutons
+            document.querySelectorAll('.scenario-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(scenarioType + 'ScenarioBtn').classList.add('active');
+            
+            // Afficher la comparaison pour ce scénario
+            displayScenarioComparison(scenarioType);
+        }
+
+        function createOptimizedScenario() {
+            // Créer un scénario optimisé basé sur les meilleures pratiques
+            const optimized = JSON.parse(JSON.stringify(currentResults));
+            
+            // Réductions appliquées :
+            // - 30% sur transport domicile-travail (mobilité durable)
+            optimized.transport_domicile *= 0.7;
+            
+            // - 40% sur flotte postale (électrification)
+            optimized.flotte_postale *= 0.6;
+            
+            // - 50% sur énergie (renouvelables + efficacité)
+            optimized.energie *= 0.5;
+            
+            // - 20% sur transport sous-traité (optimisation)
+            optimized.transport_soustraite *= 0.8;
+            
+            // - 30% sur déplacements pro (visioconférence)
+            optimized.deplacements_pro *= 0.7;
+            
+            // - 15% sur restauration (plus de végétarien)
+            optimized.restauration *= 0.85;
+            
+            // - 25% sur déchets (recyclage + réduction)
+            optimized.dechets *= 0.75;
+            
+            scenarios.optimized = optimized;
+        }
+
+        function displayScenarioComparison(selectedScenario = 'current') {
+            const container = document.getElementById('scenarioComparison');
+            
+            if (!scenarios.current) {
+                container.innerHTML = '<p>Aucun scénario disponible. Veuillez d\'abord calculer un bilan.</p>';
+                return;
+            }
+            
+            const currentTotal = Object.keys(scenarios.current)
+                .filter(key => key !== 'details')
+                .reduce((sum, key) => sum + scenarios.current[key], 0);
+                
+            const optimizedTotal = Object.keys(scenarios.optimized)
+                .filter(key => key !== 'details')
+                .reduce((sum, key) => sum + scenarios.optimized[key], 0);
+            
+            const reduction = currentTotal - optimizedTotal;
+            const reductionPercent = (reduction / currentTotal * 100).toFixed(1);
+            
+            container.innerHTML = `
+                <div class="summary-total">
+                    <h2>Potentiel de réduction</h2>
+                    <div class="total-value">${reduction.toFixed(1)}</div>
+                    <p>tonnes CO₂ eq / an (${reductionPercent}% de réduction)</p>
+                </div>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Catégorie</th>
+                            <th>Scénario actuel</th>
+                            <th>Scénario optimisé</th>
+                            <th>Réduction</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Transport domicile-travail</td>
+                            <td>${scenarios.current.transport_domicile.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.transport_domicile.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.transport_domicile - scenarios.optimized.transport_domicile).toFixed(2)} t</td>
+                        </tr>
+                        <tr>
+                            <td>Flotte postale</td>
+                            <td>${scenarios.current.flotte_postale.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.flotte_postale.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.flotte_postale - scenarios.optimized.flotte_postale).toFixed(2)} t</td>
+                        </tr>
+                        <tr>
+                            <td>Énergie</td>
+                            <td>${scenarios.current.energie.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.energie.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.energie - scenarios.optimized.energie).toFixed(2)} t</td>
+                        </tr>
+                        <tr>
+                            <td>Transport sous-traité</td>
+                            <td>${scenarios.current.transport_soustraite.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.transport_soustraite.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.transport_soustraite - scenarios.optimized.transport_soustraite).toFixed(2)} t</td>
+                        </tr>
+                        <tr>
+                            <td>Déplacements professionnels</td>
+                            <td>${scenarios.current.deplacements_pro.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.deplacements_pro.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.deplacements_pro - scenarios.optimized.deplacements_pro).toFixed(2)} t</td>
+                        </tr>
+                        <tr>
+                            <td>Restauration</td>
+                            <td>${scenarios.current.restauration.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.restauration.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.restauration - scenarios.optimized.restauration).toFixed(2)} t</td>
+                        </tr>
+                        <tr>
+                            <td>Déchets</td>
+                            <td>${scenarios.current.dechets.toFixed(2)} t</td>
+                            <td>${scenarios.optimized.dechets.toFixed(2)} t</td>
+                            <td>-${(scenarios.current.dechets - scenarios.optimized.dechets).toFixed(2)} t</td>
+                        </tr>
+                        <tr style="font-weight: bold; background: #f8f9fa;">
+                            <td>TOTAL</td>
+                            <td>${currentTotal.toFixed(2)} t</td>
+                            <td>${optimizedTotal.toFixed(2)} t</td>
+                            <td>-${reduction.toFixed(2)} t</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="chart-box comparison-chart">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            `;
+            
+            // Créer le graphique de comparaison
+            createComparisonChart();
+        }
+
+        function createComparisonChart() {
+            const canvas = document.getElementById('comparisonChart');
+            if (!canvas || typeof Chart === 'undefined') return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Transport\ndomicile', 'Flotte\npostale', 'Énergie', 'Transport\nsous-traité', 'Déplacements\npro', 'Restauration', 'Déchets'],
+                    datasets: [{
+                        label: 'Scénario actuel',
+                        data: [
+                            scenarios.current.transport_domicile,
+                            scenarios.current.flotte_postale,
+                            scenarios.current.energie,
+                            scenarios.current.transport_soustraite,
+                            scenarios.current.deplacements_pro,
+                            scenarios.current.restauration,
+                            scenarios.current.dechets
+                        ],
+                        backgroundColor: '#E60028',
+                        borderColor: '#CC0020',
+                        borderWidth: 2
+                    }, {
+                        label: 'Scénario optimisé',
+                        data: [
+                            scenarios.optimized.transport_domicile,
+                            scenarios.optimized.flotte_postale,
+                            scenarios.optimized.energie,
+                            scenarios.optimized.transport_soustraite,
+                            scenarios.optimized.deplacements_pro,
+                            scenarios.optimized.restauration,
+                            scenarios.optimized.dechets
+                        ],
+                        backgroundColor: '#00A651',
+                        borderColor: '#008040',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Émissions (tonnes CO₂ eq/an)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw.toFixed(2)} t CO₂ eq/an`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCustomScenario() {
+            showNotification('Fonctionnalité en développement', 'info');
+        }
+
+        // Export des résultats
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // En-tête
+            doc.setFontSize(20);
+            doc.setTextColor(0, 58, 112);
+            doc.text('Bilan GES - La Poste', 20, 20);
+            
+            // Ligne horizontale
+            doc.setDrawColor(255, 204, 0);
+            doc.setLineWidth(2);
+            doc.line(20, 25, 190, 25);
+            
+            // Informations générales
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            const entite = document.getElementById('entite_nom').value || 'Non renseigné';
+            const annee = document.getElementById('annee').value || new Date().getFullYear();
+            const auteur = document.getElementById('auteur_prenom').value + ' ' + document.getElementById('auteur_nom').value;
+            
+            doc.text(`Entité: ${entite}`, 20, 40);
+            doc.text(`Année: ${annee}`, 20, 50);
+            doc.text(`Auteur: ${auteur}`, 20, 60);
+            doc.text(`Date: ${new Date().toLocaleDateString('fr-FR')}`, 20, 70);
+            
+            // Total
+            doc.setFontSize(16);
+            doc.setTextColor(230, 0, 40);
+            const total = document.getElementById('totalEmissions').textContent;
+            doc.text(`Total des émissions: ${total} tonnes CO₂ eq/an`, 20, 90);
+            
+            // Scopes
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Répartition par scopes:', 20, 110);
+            doc.text(`Scope 1: ${document.getElementById('scope1Value').textContent}`, 25, 120);
+            doc.text(`Scope 2: ${document.getElementById('scope2Value').textContent}`, 25, 130);
+            doc.text(`Scope 3: ${document.getElementById('scope3Value').textContent}`, 25, 140);
+            
+            // Détails par catégorie
+            let yPosition = 160;
+            doc.setFontSize(14);
+            doc.text('Détail par catégorie', 20, yPosition);
+            yPosition += 10;
+            
+            doc.setFontSize(11);
+            const categories = document.querySelectorAll('.result-category');
+            categories.forEach(category => {
+                const title = category.querySelector('.category-title').textContent;
+                const value = category.querySelector('.category-total').textContent;
+                doc.text(`${title}: ${value}`, 25, yPosition);
+                yPosition += 8;
+                
+                if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+            });
+            
+            // Pied de page
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text('Document généré automatiquement - La Poste', 20, 285);
+            
+            // Sauvegarder
+            doc.save(`bilan_ges_${annee}_${entite.replace(/\s+/g, '_')}.pdf`);
+            showNotification('PDF exporté avec succès', 'success');
+        }
+
+        function exportToExcel() {
+            // Créer un tableau de données
+            const data = [
+                ['Bilan GES - La Poste'],
+                [''],
+                ['Informations générales'],
+                ['Entité', document.getElementById('entite_nom').value || ''],
+                ['Code REGATE', document.getElementById('code_regate').value || ''],
+                ['Année', document.getElementById('annee').value || ''],
+                ['Auteur', document.getElementById('auteur_prenom').value + ' ' + document.getElementById('auteur_nom').value],
+                [''],
+                ['Résultats par catégorie', 'Émissions (t CO₂ eq)']
+            ];
+            
+            // Ajouter les résultats
+            const categories = document.querySelectorAll('.result-category');
+            categories.forEach(category => {
+                const title = category.querySelector('.category-title').textContent.replace(/[^\w\s]/gi, '').trim();
+                const value = category.querySelector('.category-total').textContent.replace(' t CO₂', '');
+                data.push([title, parseFloat(value)]);
+            });
+            
+            // Total
+            data.push(['']);
+            data.push(['TOTAL', parseFloat(document.getElementById('totalEmissions').textContent)]);
+            
+            // Scopes
+            data.push(['']);
+            data.push(['Scopes']);
+            data.push(['Scope 1', parseFloat(document.getElementById('scope1Value').textContent)]);
+            data.push(['Scope 2', parseFloat(document.getElementById('scope2Value').textContent)]);
+            data.push(['Scope 3', parseFloat(document.getElementById('scope3Value').textContent)]);
+            
+            // Indicateurs
+            const collaborateurs = (parseFloat(document.getElementById('collaborateurs_internes').value) || 0) + 
+                                  (parseFloat(document.getElementById('collaborateurs_externes').value) || 0);
+            if (collaborateurs > 0) {
+                data.push(['']);
+                data.push(['Indicateurs']);
+                data.push(['Émissions par collaborateur', (parseFloat(document.getElementById('totalEmissions').textContent) / collaborateurs).toFixed(3)]);
+            }
+            
+            // Créer le CSV
+            let csv = '\ufeff'; // BOM pour UTF-8
+            data.forEach(row => {
+                csv += row.map(cell => `"${cell}"`).join(';') + '\n';
+            });
+            
+            // Télécharger
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `bilan_ges_${document.getElementById('annee').value}_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            
+            showNotification('Fichier Excel (CSV) exporté avec succès', 'success');
+        }
+
+        function shareResults() {
+            const total = document.getElementById('totalEmissions').textContent;
+            const entite = document.getElementById('entite_nom').value || 'Notre entité';
+            const annee = document.getElementById('annee').value || new Date().getFullYear();
+            
+            const text = `Bilan GES ${annee} de ${entite}: ${total} tonnes CO₂ eq/an. Engagés pour la neutralité carbone avec La Poste! 🌱 #LaPoste #NeutralitéCarbone #RSE`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Bilan GES - La Poste',
+                    text: text,
+                    url: window.location.href
+                }).catch(() => {
+                    // Si le partage échoue, copier dans le presse-papier
+                    copyToClipboard(text);
+                });
+            } else {
+                copyToClipboard(text);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showNotification('Texte copié dans le presse-papier', 'info');
+            }).catch(() => {
+                // Fallback pour les navigateurs plus anciens
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showNotification('Texte copié dans le presse-papier', 'info');
+                } catch (err) {
+                    showNotification('Impossible de copier le texte', 'error');
+                }
+                
+                document.body.removeChild(textArea);
+            });
+        }
+
+        // Import/Export fonctions
+        function importFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,.csv';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    try {
+                        if (file.name.endsWith('.json')) {
+                            const data = JSON.parse(event.target.result);
+                            fillFormWithData(data);
+                            showNotification('Fichier JSON importé avec succès', 'success');
+                        } else {
+                            showNotification('Format CSV en cours de développement', 'info');
+                        }
+                    } catch (error) {
+                        showNotification('Erreur lors de l\'import du fichier', 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+            closeAutoFillMenu();
+        }
+
+        function saveFormData() {
+            const formData = {};
+            const form = document.getElementById('bilanGESForm');
+            const inputs = form.querySelectorAll('input, select');
+            
+            inputs.forEach(input => {
+                if (input.name || input.id) {
+                    formData[input.name || input.id] = input.value;
+                }
+            });
+            
+            const dataStr = JSON.stringify(formData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bilan_ges_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            showNotification('Données sauvegardées', 'success');
+            closeAutoFillMenu();
+        }
+
+        function loadFormData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        fillFormWithData(data);
+                        showNotification('Données chargées avec succès', 'success');
+                    } catch (error) {
+                        showNotification('Erreur lors du chargement du fichier', 'error');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+            closeAutoFillMenu();
+        }
+
+        // Notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Écouteurs d'événements pour la mise à jour de la progression
+        document.addEventListener('input', updateProgress);
+        document.addEventListener('change', updateProgress);
+
+        // S'assurer que le bouton de calcul fonctionne
+        window.calculerBilan = calculerBilan;
+    </script>
+</body>
+</html>
